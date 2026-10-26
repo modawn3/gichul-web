@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>수능 수학 기출 학습</title>
 <link rel="stylesheet" href="katex.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap">
 <style>
 :root{--bg:#f6f7f9;--panel:#fff;--line:#e2e5ea;--text:#1d2330;--muted:#6b7385;--accent:#2f6fde;--accent-soft:#e8f0fd;--ok:#1f9d55;--ok-soft:#e6f6ec;--bad:#d64545;--bad-soft:#fdeceb;--warn:#b7791f;--warn-soft:#fdf5e6}
 *{box-sizing:border-box}
@@ -90,8 +91,7 @@ table.stats th{background:var(--bg);font-weight:600;color:var(--muted);font-size
 .exlist button{font:inherit;font-size:14px;text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer}
 .exlist button:hover{border-color:var(--accent)}
 .exlist .sub{display:block;font-size:12px;color:var(--muted);margin-top:2px}
-.exlist .setitem{position:relative}.exlist .setitem>button[data-set]{width:100%;height:100%;padding-right:54px}
-.exlist .setdel{position:absolute;top:8px;right:8px;padding:2px 8px;font-size:12px;color:var(--bad);border-color:var(--line)}
+.exlist .setdel{color:var(--bad)}
 .exlist .setdel:hover{border-color:var(--bad);background:var(--bad-soft)}
 .opts{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0;font-size:14px}
 .timer{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums}
@@ -142,6 +142,31 @@ body.notags .chip[data-tag]{cursor:default}body.notags .chip[data-tag]:hover{bor
 .layout.noside{grid-template-columns:1fr}.layout.noside aside{display:none}
 @media print{header,aside,.toolbar,.noprint{display:none!important}.layout{display:block}main{padding:0}body{background:#fff}.plist .pitem{border:0;border-bottom:1px solid #ccc;border-radius:0}}
 @media (max-width:820px){.layout{grid-template-columns:1fr}aside{position:static;max-height:none}.sheet{grid-template-columns:1fr}.sheet .left{border-right:0}}
+/* 실제 시험지 양식 인쇄(A4, 2단): 인쇄할 때만 #paper가 보이고 나머지는 숨는다 */
+#paper{display:none}
+@page{size:A4;margin:14mm 12mm 14mm 12mm;@bottom-center{content:counter(page);font-size:9pt}}
+@media print{body.paper-print>*:not(#paper){display:none!important}body.paper-print #paper{display:block}body.paper-print{background:#fff}}
+#paper{font-family:'Nanum Myeongjo','NanumMyeongjo','Batang','바탕',serif;font-size:10.5pt;line-height:1.75;color:#000;background:#fff}
+#paper .ph{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2.5px solid #000;padding-bottom:4px;margin-bottom:2px;font-size:9.5pt}
+#paper .ph .t{font-size:20pt;font-weight:700;letter-spacing:6px}
+#paper .ph .box2{border:1.5px solid #000;padding:2px 10px;font-weight:700}
+#paper .who{display:flex;gap:24px;justify-content:flex-end;font-size:9.5pt;margin:4px 0 2px}
+#paper .who span{border-bottom:1px solid #000;min-width:120px;display:inline-block}
+#paper .sub{text-align:center;font-size:10pt;margin:4px 0 6px}
+#paper .sec{border-top:2.5px solid #000;border-bottom:1px solid #000;padding:3px 0;margin:6px 0 10px;font-weight:700;text-align:center;font-size:12pt}
+#paper .cols{column-count:2;column-gap:9mm;column-rule:1px solid #000}
+#paper .q{break-inside:avoid;margin:0 0 28px}
+#paper .q img{display:block;max-width:100%}
+#paper .qn{font-weight:700;font-size:11.5pt}
+#paper .vq{font-family:inherit;font-size:10.5pt;line-height:1.75;padding:0;background:none}
+#paper .pb{break-before:page}
+#paper table.ans{border-collapse:collapse;width:100%;margin:6px 0 14px}
+#paper table.ans td,#paper table.ans th{border:1px solid #000;padding:3px 4px;text-align:center;font-size:9.5pt}
+#paper .src{font-size:8.5pt;color:#444;margin-top:8px}
+.exlist .setitem{position:relative}.exlist .setitem>button[data-set],.exlist .setitem>button[data-exam]{width:100%;height:100%;padding-bottom:38px}
+.exlist .setact{position:absolute;bottom:8px;right:8px;display:flex;gap:4px}
+.exlist .setact button{padding:2px 8px;font-size:12px;border-color:var(--line)}
+.exlist .setprt{color:var(--accent)}.exlist .setprt:hover{border-color:var(--accent);background:var(--accent-soft)}
 </style>
 </head>
 <body>
@@ -163,6 +188,7 @@ body.notags .chip[data-tag]{cursor:default}body.notags .chip[data-tag]:hover{bor
   <main id="main"></main>
 </div>
 <div class="overlay" id="ov"><div class="sheet" id="sheet"></div></div>
+<div id="paper"></div>
 
 <script src="supabase.js"></script>
 <script src="config.js"></script>
@@ -447,12 +473,12 @@ function SHOW22(){return Date.now()>=new Date(2026,10,20).getTime()}
 function renderExam(){
   let h=`<div class="unithead"><h2>모의고사 풀기</h2><p>30문항(공통 22 + 확률과 통계 8)을 100분 동안 풀고 한꺼번에 채점합니다. 채점 뒤 문항을 누르면 해설을 볼 수 있습니다.</p></div>`;
   if(DB.live) h+=`<div class="section"><h3>풀던 시험이 있습니다</h3><p class="small">${DB.live.title} · 답한 문항 ${Object.keys(DB.live.ans).length}/30</p><div class="toolbar"><button class="btn primary" id="resume">이어서 풀기</button><button class="btn" id="quit">그만두기</button></div></div>`;
-  h+=`<div class="section"><h3>기존 회차로 풀기</h3><div class="exlist">`+EXAMS.map(e=>`<button data-exam="${e}">${byId[e+'_01'].label}<span class="sub">${bestOf(byId[e+'_01'].label)}</span></button>`).join('')+'</div></div>';
+  h+=`<div class="section"><h3>기존 회차로 풀기</h3><div class="exlist">`+EXAMS.map(e=>`<div class="setitem"><button data-exam="${e}">${byId[e+'_01'].label}<span class="sub">${bestOf(byId[e+'_01'].label)}</span></button><span class="setact"><button class="setprt" data-prtexam="${e}" title="실제 시험지 양식으로 인쇄·PDF 저장">시험지 PDF</button></span></div>`).join('')+'</div></div>';
   h+=`<div class="section"><h3>섞어서 새 회차 만들기</h3><p class="small">여러 회차의 문항을 섞어 한 회분을 새로 만듭니다. 각 번호는 다른 회차의 같은 번호 문항에서 가져오므로 배점(2·3·4점)과 문항 유형이 실제 시험과 같고, 단원별 문항 수도 실제 시험 범위 안에서 맞춥니다. 모든 중단원이 한 문항 이상 들어갑니다.</p>
    <div class="opts"><label ${SHOW22()?'':'hidden'}><input type="checkbox" id="o22" ${SHOW22()?'checked':''}> 2022 개정 범위만 (원순열 빼기)</label><label><input type="checkbox" id="ofresh" checked> 안 푼 문제 먼저</label><label><input type="checkbox" id="oweak"> 약한 단원·틀린 문제 더 넣기</label></div>
    ${Object.keys(VARS).length?`<div class="opts"><label>문항: <select id="ovar"><option value="">기출 원문항 그대로</option><option value="1">변형 1단계 (숫자 바꾸기)</option><option value="2">변형 2단계 (조건·발문 바꾸기)</option><option value="3">변형 3단계 (구조 바꾸기)</option><option value="mix">혼합 변형 (쉬운 번호 1단계·중간 2단계·어려운 번호 3단계)</option></select></label></div>`:''}
    <div class="toolbar"><button class="btn primary" id="mkmix">새 회차 만들기</button></div></div>`;
-  if(DB.sets.length) h+=`<div class="section"><h3>내가 만든 회차</h3><div class="exlist">`+DB.sets.map((s,k)=>`<div class="setitem"><button data-set="${k}">${s.title}<span class="sub">${fmtDate(s.t)} 만듦 · ${bestOf(s.title)}</span></button><button class="setdel" data-setdel="${k}" title="이 회차를 목록에서 지우기">삭제</button></div>`).join('')+'</div></div>';
+  if(DB.sets.length) h+=`<div class="section"><h3>내가 만든 회차</h3><div class="exlist">`+DB.sets.map((s,k)=>`<div class="setitem"><button data-set="${k}">${s.title}<span class="sub">${fmtDate(s.t)} 만듦 · ${bestOf(s.title)}</span></button><span class="setact"><button class="setprt" data-prtset="${k}" title="실제 시험지 양식으로 인쇄·PDF 저장">시험지 PDF</button><button class="setdel" data-setdel="${k}" title="이 회차를 목록에서 지우기">삭제</button></span></div>`).join('')+'</div></div>';
   if(DB.results.length) h+=`<div class="section"><h3>지난 응시 기록</h3><table class="stats"><tr><th>날짜</th><th>회차</th><th>점수</th><th>맞은 문항</th><th>걸린 시간</th><th></th></tr>`+DB.results.map((r,k)=>[r,k]).reverse().map(([r,k])=>`<tr><td>${fmtDate(r.t)}</td><td>${r.title}</td><td><b>${r.score}</b>점</td><td>${r.ok}/30</td><td>${Math.round(r.secs/60)}분</td><td><a href="#" data-res="${k}">결과 보기</a></td></tr>`).join('')+'</table></div>';
   return h;
 }
@@ -547,6 +573,33 @@ function renderResult(){
   h+='<table class="stats"><tr><th>번호</th><th>배점</th><th>단원</th><th>출처</th><th>내 답</th><th>정답</th><th>결과</th></tr>'+r.ids.map((id,k)=>{const X=xp(id),it=X.it,a=r.ans[id];return `<tr><td>${k+1}</td><td>${it.pts}</td><td>${unitBy[it.code].name}</td><td><a href="#" data-open="${id}">${it.label} ${it.n}번${X.lv?` 변형 ${X.lv}단계`:''}</a></td><td>${a==null||a===''?'-':(X.mc?CIRC[a]:a)}</td><td>${X.atext}</td><td>${r.marks[id]?'<span class="st ok">맞음</span>':'<span class="st bad">틀림</span>'}</td></tr>`}).join('')+'</table>';
   return h;
 }
+// ---- 실제 시험지 양식 인쇄: 공통 1~22(2단) → 쪽 넘김 → 확률과 통계 23~30 → 쪽 넘김 → 정답표 ----
+function paperQ(x,k){
+  const X=xp(x),it=X.it;
+  if(!X.V) return `<div class="q"><img ${QIMG(X.id)} alt="${k+1}번"></div>`;   // 원문항 그림에는 번호·배점이 들어 있다
+  let q=tex(X.V.q); const pts=` <span style="white-space:nowrap">[${it.pts}점]</span>`, i=q.indexOf('<div class=\'ch');
+  q=i>=0?q.slice(0,i)+pts+q.slice(i):q+pts;
+  return `<div class="q"><span class="qn">${k+1}.</span> <span class="vq">${q}</span></div>`;
+}
+function paperHTML(title,ids,sub){
+  const xs=ids.map(xp), anyV=xs.some(X=>X.lv);
+  const head=(sec)=>`<div class="ph"><span class="box2">제 2 교시</span><span class="t">수학 영역</span><span>${sec}</span></div>`;
+  const ansT=rng=>`<table class="ans"><tr><th>번호</th>${rng.map(k=>`<th>${k+1}</th>`).join('')}</tr><tr><th>정답</th>${rng.map(k=>`<td>${xs[k].atext}</td>`).join('')}</tr><tr><th>배점</th>${rng.map(k=>`<td>${xs[k].it.pts}</td>`).join('')}</tr>${anyV?`<tr><th>구분</th>${rng.map(k=>`<td>${xs[k].lv?xs[k].lv+'단계':'원'}</td>`).join('')}</tr>`:''}</table>`;
+  const r=(a,b)=>Array.from({length:b-a},(_,i)=>a+i);
+  return head('공통과목')+`<div class="who">성명 <span></span> 수험 번호 <span></span></div><div class="sub">${sub}</div><div class="sec">공통과목 (대수 · 미적분Ⅰ)</div><div class="cols">${r(0,22).map(k=>paperQ(ids[k],k)).join('')}</div>`
+    +`<div class="pb"></div>`+head('선택과목')+`<div class="sec">선택과목 (확률과 통계)</div><div class="cols">${r(22,ids.length).map(k=>paperQ(ids[k],k)).join('')}</div>`
+    +`<div class="pb"></div>`+head('정답')+`<div class="sub">${title} 정답</div>${ansT(r(0,15))}${ansT(r(15,ids.length))}`
+    +`<div class="src">출처: ${xs.map((X,k)=>`${k+1}. ${X.it.label} ${X.it.n}번${X.lv?` 변형 ${X.lv}단계`:''}`).join(' · ')}</div>`;
+}
+// 그림(웹 버전은 서명된 주소)이 다 받아진 뒤 인쇄 창을 연다. 인쇄 창에서 'PDF로 저장'을 고르면 PDF가 된다.
+function printPaper(title,ids,sub){
+  const P=document.getElementById('paper'); P.innerHTML=paperHTML(title,ids,sub||title);
+  document.body.classList.add('paper-print');
+  const t0=Date.now(), oldTitle=document.title; document.title=title;
+  const ready=()=>[...P.querySelectorAll('img')].every(im=>im.complete&&im.naturalWidth>1);
+  const go=()=>{window.print();document.title=oldTitle;setTimeout(()=>document.body.classList.remove('paper-print'),500)};
+  (function wait(){if(ready()||Date.now()-t0>20000)go();else setTimeout(wait,200)})();
+}
 function renderPrint(){
   const P=state.print, list=P.ids.map(xp);
   return `<div class="unithead"><h2>${P.title}</h2><p>수학 영역 · 30문항 · 100분</p></div>
@@ -564,6 +617,8 @@ function render(){
   if(g('startRev')) g('startRev').onclick=()=>{const d=dueIds();if(d.length)openQ(d[0],d)};
   if(g('mkmix')) g('mkmix').onclick=()=>{const lv=g('ovar')?g('ovar').value:'';const ids=makeMixed({only2022:g('o22').checked,fresh:g('ofresh').checked,weak:g('oweak').checked,lv});if(!ids){alert('조건에 맞게 만들지 못했습니다. 옵션을 바꿔 다시 시도해 주세요.');return}const no=1+Math.max(0,...DB.sets.concat(DB.results).map(x=>+((x.title.match(/나만의 모의고사 (\d+)회/)||[])[1]||0)));const title=`나만의 모의고사 ${no}회${lv?` (${LVNAME[lv]})`:''}`;DB.sets.push({title,ids,t:Date.now()});save();if(confirm(`${title}를 만들었습니다. 지금 풀까요?\n(취소를 누르면 목록에 저장만 합니다)`))startExam(title,ids);else render()};
   m.querySelectorAll('[data-exam]').forEach(b=>b.onclick=()=>{if(DB.live&&!confirm('풀던 시험이 있습니다. 새로 시작할까요?'))return;startExam(byId[b.dataset.exam+'_01'].label,examIds(b.dataset.exam))});
+  m.querySelectorAll('[data-prtexam]').forEach(b=>b.onclick=()=>{const e=b.dataset.prtexam,it=byId[e+'_01'];printPaper(it.label,examIds(e),`${it.label} 수학 영역 (공통 + 확률과 통계)`)});
+  m.querySelectorAll('[data-prtset]').forEach(b=>b.onclick=()=>{const s=DB.sets[+b.dataset.prtset];printPaper(s.title,s.ids,`${s.title} · ${fmtDate(s.t)} 만듦`)});
   m.querySelectorAll('[data-setdel]').forEach(b=>b.onclick=()=>{const s=DB.sets[+b.dataset.setdel];if(!confirm(`${s.title}를 목록에서 지울까요?\n이미 푼 점수와 결과는 지난 응시 기록에 그대로 남습니다.`))return;DB.sets.splice(+b.dataset.setdel,1);save();render()});
   m.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{const s=DB.sets[+b.dataset.set];if(DB.live&&!confirm('풀던 시험이 있습니다. 새로 시작할까요?'))return;startExam(s.title,s.ids)});
   m.querySelectorAll('[data-res]').forEach(a=>a.onclick=e=>{e.preventDefault();state.tab='result';state.res=+a.dataset.res;syncTabs();render()});
@@ -572,7 +627,7 @@ function render(){
   if(g('quit')) g('quit').onclick=()=>{if(confirm('풀던 시험을 그만둘까요? 답은 저장되지 않습니다.')){delete DB.live;save();render()}};
   if(g('backExam')) g('backExam').onclick=()=>{state.tab='exam';syncTabs();render()};
   if(g('retake')) g('retake').onclick=()=>{const r=DB.results[state.res];startExam(r.title,r.ids)};
-  if(g('printExam')) g('printExam').onclick=()=>{const r=DB.results[state.res];state.print={title:r.title,ids:r.ids};state.tab='print';render()};
+  if(g('printExam')) g('printExam').onclick=()=>{const r=DB.results[state.res];printPaper(r.title,r.ids,r.title)};
   m.querySelectorAll('select[data-f]').forEach(s=>s.onchange=()=>{state[s.dataset.f]=s.value;render()});
   m.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{state.view=b.dataset.v;render()});
   m.querySelectorAll('.card').forEach(c=>c.onclick=()=>openQ(c.dataset.id, state.tab==='units'?filtered().map(i=>i.id):state.tab==='review'?dueIds():state.tab==='tags'?window.__tlist:null));
