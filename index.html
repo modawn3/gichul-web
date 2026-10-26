@@ -90,6 +90,9 @@ table.stats th{background:var(--bg);font-weight:600;color:var(--muted);font-size
 .exlist button{font:inherit;font-size:14px;text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer}
 .exlist button:hover{border-color:var(--accent)}
 .exlist .sub{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.exlist .setitem{position:relative}.exlist .setitem>button[data-set]{width:100%;height:100%;padding-right:54px}
+.exlist .setdel{position:absolute;top:8px;right:8px;padding:2px 8px;font-size:12px;color:var(--bad);border-color:var(--line)}
+.exlist .setdel:hover{border-color:var(--bad);background:var(--bad-soft)}
 .opts{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0;font-size:14px}
 .timer{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums}
 .timer.over{color:var(--bad)}
@@ -268,8 +271,11 @@ function refreshBadges(){
 
 let state={tab:'exam',unit:'A1',year:'all',exam:'all',pts:'all',diff:'all',conc:'all',sw:'all',view:'cards',tsel:[],tg:'c'};
 
+// 'ALL' = 단원 구분 없이 전체 문제
+const ALLU={code:'ALL',name:'전체 문제',subject:'전체',mid:'모든 단원'};
+const inUnit=(i,code)=>code==='ALL'||i.code===code;
 function unitStats(code){
-  const its=ITEMS.filter(i=>i.code===code);
+  const its=ITEMS.filter(i=>inUnit(i,code));
   const tried=its.filter(i=>DB.att[i.id]);
   const ok=tried.filter(i=>last(i.id).ok).length;
   return {n:its.length,tried:tried.length,ok,acc:tried.length?Math.round(ok/tried.length*100):null};
@@ -277,6 +283,7 @@ function unitStats(code){
 function renderSide(){
   const side=document.getElementById('side');
   let h='',subj='',mid='';
+  {const s=unitStats('ALL');h+=`<div class="unit ${state.unit==='ALL'&&state.tab==='units'?'on':''}" data-u="ALL"><span><b>전체 문제</b></span><span class="r">${s.acc!==null?`<span class="acc">${s.acc}%</span>`:''}<span class="badge">${s.n}</span></span></div>`}
   for(const u of UNITS){
     if(u.subject!==subj){subj=u.subject;h+=`<h3>${subj}</h3>`;mid=''}
     if(u.mid!==mid){mid=u.mid;h+=`<h4>${mid}</h4>`}
@@ -287,7 +294,7 @@ function renderSide(){
   side.querySelectorAll('.unit').forEach(el=>el.onclick=()=>{state.unit=el.dataset.u;state.conc='all';state.sw='all';state.tab='units';syncTabs();render()});
 }
 function filtered(){
-  return ITEMS.filter(i=>i.code===state.unit
+  return ITEMS.filter(i=>inUnit(i,state.unit)
     &&(state.year==='all'||i.y==+state.year)
     &&(state.exam==='all'||i.e===state.exam)
     &&(state.pts==='all'||i.pts==+state.pts)
@@ -307,14 +314,14 @@ function examOpts(){
 }
 function renderUnits(){
   if(state.exam!=='all'&&!examOpts().some(o=>o[0]===state.exam))state.exam='all';
-  const u=unitBy[state.unit], list=filtered(), s=unitStats(u.code);
-  let h=`<div class="unithead"><h2>${u.name}</h2><p>${u.subject} › ${u.mid} · 성취기준 ${u.std} · ${u.desc}</p></div>
+  const u=state.unit==='ALL'?ALLU:unitBy[state.unit], list=filtered(), s=unitStats(u.code);
+  let h=`<div class="unithead"><h2>${u.name}</h2><p>${u.code==='ALL'?'단원 구분 없이 모든 문항을 봅니다. 위 칸으로 연도·시험·배점·난이도·핵심 개념을 골라 좁힐 수 있습니다.':`${u.subject} › ${u.mid} · 성취기준 ${u.std} · ${u.desc}`}</p></div>
   <div class="toolbar">
    ${sel('year',[['all','전체 연도'],['2024','2024년 시행'],['2025','2025년 시행'],['2026','2026년 시행']],state.year)}
    ${sel('exam',[['all','전체 시험'],...examOpts()],state.exam)}
    ${sel('pts',[['all','전체 배점'],['2','2점'],['3','3점'],['4','4점']],state.pts)}
    ${HAS_TAGS?sel('diff',[['all','전체 난이도'],['hi','난이도 상'],['mid','난이도 중'],['lo','난이도 하']],state.diff):''}
-   ${HAS_TAGS?sel('conc',[['all','전체 핵심 개념'],...[...new Set(ITEMS.filter(i=>i.code===u.code).map(i=>tg(i.id).c))].filter(Boolean).sort().map(c=>[c,TD.c[c]])],state.conc):''}
+   ${HAS_TAGS?sel('conc',[['all','전체 핵심 개념'],...[...new Set(ITEMS.filter(i=>inUnit(i,u.code)).map(i=>tg(i.id).c))].filter(Boolean).sort().map(c=>[c,TD.c[c]])],state.conc):''}
    <button class="btn ${state.view==='cards'?'primary':''}" data-v="cards">카드로 보기</button>
    <button class="btn ${state.view==='list'?'primary':''}" data-v="list">일괄 보기·인쇄</button>
    <button class="btn" id="startSet">이 단원 차례로 풀기</button>
@@ -322,7 +329,7 @@ function renderUnits(){
   </div>`;
   if(!list.length) h+='<div class="empty">조건에 맞는 문항이 없습니다.</div>';
   else if(state.view==='cards'){
-    h+='<div class="grid">'+list.map(i=>`<div class="card" data-id="${i.id}"><div class="meta"><span><b>${i.label}</b> ${i.n}번 <span class="pt">${i.pts}점</span>${ddBadge(i.id)}</span>${stBadge(i.id)}</div><div class="thumb"><img loading="lazy" ${QIMG(i.id)} alt=""></div></div>`).join('')+'</div>';
+    h+='<div class="grid">'+list.map(i=>`<div class="card" data-id="${i.id}"><div class="meta"><span><b>${i.label}</b> ${i.n}번 <span class="pt">${i.pts}점${u.code==='ALL'?' · '+unitBy[i.code].name:''}</span>${ddBadge(i.id)}</span>${stBadge(i.id)}</div><div class="thumb"><img loading="lazy" ${QIMG(i.id)} alt=""></div></div>`).join('')+'</div>';
   }else{
     h+=`<div class="toolbar noprint"><button class="btn primary" onclick="window.print()">인쇄 / PDF로 저장</button><label class="small"><input type="checkbox" id="withKey" ${state.withKey?'checked':''}> 마지막에 정답표 넣기</label></div>
     <div class="plist">`+list.map((i,k)=>`<div class="pitem"><div class="src">[${k+1}] ${i.label} ${i.n}번 · ${i.pts}점</div><img ${QIMG(i.id)} alt=""></div>`).join('')+'</div>';
@@ -401,6 +408,13 @@ function goTag(tag){if(!TAGS_ON())return;state.tab='tags';state.tg=tag[0]==='u'?
 
 // ---- exam mode ----
 const EXAMS=[...new Set(ITEMS.map(i=>i.e))].sort((a,b)=>byId[b+'_01'].ym.localeCompare(byId[a+'_01'].ym));
+// 모의고사 문항 키: 원문항은 id, 변형은 'id#단계'(1·2·3). 풀이 기록도 변형은 DB.vatt[id#단계]에 따로 남는다.
+function xp(x){const [id,l]=String(x).split('#'),lv=+l||0,it=byId[id],V=lv&&VARS[id]?VARS[id][lv-1]:null;
+  return {id,lv:V?lv:0,it,V,mc:V?V.mc:it.mc,ans:V?V.ans:it.ans,atext:V?tex(V.anst):ansText(it)}}
+function openKey(x,seq,preset){const p=xp(x);openQ(p.id,seq,preset,p.lv)}
+// 혼합 변형(D형): 쉬운 번호 1단계, 중간 2단계, 어려운 번호 3단계
+function mixLv(n){return [1,2,3,4,5,6,7,8,16,17,23,24,25].includes(n)?1:[9,10,11,12,18,19,26,27].includes(n)?2:3}
+const LVNAME={1:'변형 1단계',2:'변형 2단계',3:'변형 3단계',mix:'혼합 변형'};
 function examIds(e){return ITEMS.filter(i=>i.e===e).sort((a,b)=>a.n-b.n).map(i=>i.id)}
 const MAXU={};
 for(const e of EXAMS){const c={};for(const id of examIds(e)){const k=byId[id].code;c[k]=(c[k]||0)+1}for(const k in c)MAXU[k]=Math.max(MAXU[k]||0,c[k])}
@@ -421,7 +435,9 @@ function makeMixed(opt){
     }
     if(fail)continue;
     const mids=new Set(pick.map(id=>unitBy[byId[id].code].mid));
-    if(MIDS.every(m=>mids.has(m)))return pick;
+    if(!MIDS.every(m=>mids.has(m)))continue;
+    if(!opt.lv)return pick;
+    return pick.map(id=>{const lv=opt.lv==='mix'?mixLv(byId[id].n):+opt.lv;return VARS[id]&&VARS[id][lv-1]?id+'#'+lv:id});
   }
   return null;
 }
@@ -434,8 +450,9 @@ function renderExam(){
   h+=`<div class="section"><h3>기존 회차로 풀기</h3><div class="exlist">`+EXAMS.map(e=>`<button data-exam="${e}">${byId[e+'_01'].label}<span class="sub">${bestOf(byId[e+'_01'].label)}</span></button>`).join('')+'</div></div>';
   h+=`<div class="section"><h3>섞어서 새 회차 만들기</h3><p class="small">여러 회차의 문항을 섞어 한 회분을 새로 만듭니다. 각 번호는 다른 회차의 같은 번호 문항에서 가져오므로 배점(2·3·4점)과 문항 유형이 실제 시험과 같고, 단원별 문항 수도 실제 시험 범위 안에서 맞춥니다. 모든 중단원이 한 문항 이상 들어갑니다.</p>
    <div class="opts"><label ${SHOW22()?'':'hidden'}><input type="checkbox" id="o22" ${SHOW22()?'checked':''}> 2022 개정 범위만 (원순열 빼기)</label><label><input type="checkbox" id="ofresh" checked> 안 푼 문제 먼저</label><label><input type="checkbox" id="oweak"> 약한 단원·틀린 문제 더 넣기</label></div>
+   ${Object.keys(VARS).length?`<div class="opts"><label>문항: <select id="ovar"><option value="">기출 원문항 그대로</option><option value="1">변형 1단계 (숫자 바꾸기)</option><option value="2">변형 2단계 (조건·발문 바꾸기)</option><option value="3">변형 3단계 (구조 바꾸기)</option><option value="mix">혼합 변형 (쉬운 번호 1단계·중간 2단계·어려운 번호 3단계)</option></select></label></div>`:''}
    <div class="toolbar"><button class="btn primary" id="mkmix">새 회차 만들기</button></div></div>`;
-  if(DB.sets.length) h+=`<div class="section"><h3>내가 만든 회차</h3><div class="exlist">`+DB.sets.map((s,k)=>`<button data-set="${k}">${s.title}<span class="sub">${fmtDate(s.t)} 만듦 · ${bestOf(s.title)}</span></button>`).join('')+'</div></div>';
+  if(DB.sets.length) h+=`<div class="section"><h3>내가 만든 회차</h3><div class="exlist">`+DB.sets.map((s,k)=>`<div class="setitem"><button data-set="${k}">${s.title}<span class="sub">${fmtDate(s.t)} 만듦 · ${bestOf(s.title)}</span></button><button class="setdel" data-setdel="${k}" title="이 회차를 목록에서 지우기">삭제</button></div>`).join('')+'</div></div>';
   if(DB.results.length) h+=`<div class="section"><h3>지난 응시 기록</h3><table class="stats"><tr><th>날짜</th><th>회차</th><th>점수</th><th>맞은 문항</th><th>걸린 시간</th><th></th></tr>`+DB.results.map((r,k)=>[r,k]).reverse().map(([r,k])=>`<tr><td>${fmtDate(r.t)}</td><td>${r.title}</td><td><b>${r.score}</b>점</td><td>${r.ok}/30</td><td>${Math.round(r.secs/60)}분</td><td><a href="#" data-res="${k}">결과 보기</a></td></tr>`).join('')+'</table></div>';
   return h;
 }
@@ -445,13 +462,13 @@ let tick=null;
 function examLeft(){return 100*60-Math.floor((Date.now()-DB.live.start)/1000)}
 function fmtTime(s){const neg=s<0;s=Math.abs(s);return (neg?'-':'')+String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
 function drawExam(){
-  const L=DB.live, id=L.ids[L.cur], it=byId[id], a=L.ans[id];
-  let left=`<div class="qhead"><div><b>${L.cur+1}번</b> <span class="pt">${it.pts}점</span><div class="small">${L.title}</div></div><button class="close" title="잠시 나가기 (이어 풀 수 있음)">✕</button></div><img ${QIMG(id)} alt="문제">`;
+  const L=DB.live, id=L.ids[L.cur], X=xp(id), it=X.it, a=L.ans[id];
+  let left=`<div class="qhead"><div><b>${L.cur+1}번</b> <span class="pt">${it.pts}점</span><div class="small">${L.title}</div></div><button class="close" title="잠시 나가기 (이어 풀 수 있음)">✕</button></div>${X.V?`<div class="vq">${tex(X.V.q)}</div>`:`<img ${QIMG(X.id)} alt="문제">`}`;
   let right=`<div><span class="small">남은 시간</span><div class="timer" id="timer"></div></div>`;
-  right+=it.mc?`<div class="choices">${[1,2,3,4,5].map(k=>`<button data-k="${k}" class="${a==k?'sel':''}">${CIRC[k]}</button>`).join('')}</div>`
+  right+=X.mc?`<div class="choices">${[1,2,3,4,5].map(k=>`<button data-k="${k}" class="${a==k?'sel':''}">${CIRC[k]}</button>`).join('')}</div>`
     :`<div class="shortans"><input id="sa" inputmode="numeric" placeholder="정수 답" value="${a??''}"></div>`;
   right+=`<div style="display:flex;gap:8px;justify-content:space-between"><button class="btn" id="eprev" ${L.cur<=0?'disabled':''}>← 이전</button><button class="btn" id="enext" ${L.cur>=29?'disabled':''}>다음 →</button></div>`;
-  right+=`<div><div class="small" style="margin-bottom:6px">답안지 (공통 1~22 · 확률과 통계 23~30)</div><div class="omr">${L.ids.map((x,k)=>`<button data-go="${k}" class="${L.ans[x]!=null&&L.ans[x]!==''?'has':''} ${k===L.cur?'now':''}">${k+1}${L.ans[x]!=null&&L.ans[x]!==''?' '+(byId[x].mc?CIRC[L.ans[x]]:L.ans[x]):''}</button>`).join('')}</div></div>`;
+  right+=`<div><div class="small" style="margin-bottom:6px">답안지 (공통 1~22 · 확률과 통계 23~30)</div><div class="omr">${L.ids.map((x,k)=>`<button data-go="${k}" class="${L.ans[x]!=null&&L.ans[x]!==''?'has':''} ${k===L.cur?'now':''}">${k+1}${L.ans[x]!=null&&L.ans[x]!==''?' '+(xp(x).mc?CIRC[L.ans[x]]:L.ans[x]):''}</button>`).join('')}</div></div>`;
   right+=`<button class="btn primary" id="esubmit" style="margin-top:auto">제출하고 채점하기</button>`;
   const sh=document.getElementById('sheet');
   sh.innerHTML=`<div class="left">${left}</div><div class="right">${right}</div>`;
@@ -473,8 +490,9 @@ function finishExam(){
   const L=DB.live, now=Date.now(); let score=0,ok=0;
   const marks={};
   for(const id of L.ids){
-    const it=byId[id], a=L.ans[id], good=a!=null&&a!==''&&String(a).replace(/^0+(?=\d)/,'')===String(it.ans);
+    const X=xp(id), it=X.it, a=L.ans[id], good=a!=null&&a!==''&&String(a).replace(/^0+(?=\d)/,'')===String(X.ans);
     marks[id]=good; if(good){score+=it.pts;ok++}
+    if(X.lv){(DB.vatt[id]=DB.vatt[id]||[]).push({t:now,ok:good,a:a??null,exam:L.title});continue}
     (DB.att[id]=DB.att[id]||[]).push({t:now,ok:good,a:a??null,exam:L.title});
     schedule(id,good);
   }
@@ -500,7 +518,7 @@ function predictCuts(ids){
     for(let j=0;j<TH.length;j++)p+=WE[j]/we*P(c,m,TH[j]); if(1-p>wrong)hi=m;else lo=m}return (lo+hi)/2};
   let D=TH.map(()=>{const a=new Float64Array(101);a[0]=1;return a});
   ids.forEach(id=>{
-    const it=byId[id], g=it.mc?.2:0, b=bOf(wrongOf(it),g);
+    const it=xp(id).it, g=it.mc?.2:0, b=bOf(wrongOf(it),g);
     D=D.map((row,j)=>{const p=P(g,b,TH[j]);const N=new Float64Array(101);
       for(let s=0;s<=100;s++){if(!row[s])continue;N[s]+=row[s]*(1-p);if(s+it.pts<=100)N[s+it.pts]+=row[s]*p}return N});
   });
@@ -516,25 +534,25 @@ function cutInfo(r){
 function gradeOf(score,cuts){for(let g=0;g<8;g++)if(score>=cuts[g])return g+1;return 9}
 function renderResult(){
   const r=DB.results[state.res]; if(!r) return renderExam();
-  const common=r.ids.slice(0,22).reduce((s,id)=>s+(r.marks[id]?byId[id].pts:0),0), elec=r.score-common;
+  const common=r.ids.slice(0,22).reduce((s,id)=>s+(r.marks[id]?xp(id).it.pts:0),0), elec=r.score-common;
   const byUnit={};
-  r.ids.forEach(id=>{const c=byId[id].code;(byUnit[c]=byUnit[c]||{n:0,ok:0});byUnit[c].n++;if(r.marks[id])byUnit[c].ok++});
+  r.ids.forEach(id=>{const c=xp(id).it.code;(byUnit[c]=byUnit[c]||{n:0,ok:0});byUnit[c].n++;if(r.marks[id])byUnit[c].ok++});
   const weak=Object.entries(byUnit).filter(([c,v])=>v.ok<v.n).map(([c])=>c);
   const ci=cutInfo(r);
   let h=`<div class="unithead"><h2>${r.title} 채점 결과</h2><p>${fmtDate(r.t)} · 걸린 시간 ${Math.round(r.secs/60)}분</p></div>
   <div class="kpis"><div class="kpi"><b class="score">${r.score}</b><span>점 / 100</span></div><div class="kpi"><b>${r.ok}/30</b><span>맞은 문항</span></div><div class="kpi"><b>${common}/74</b><span>공통 (대수·미적분Ⅰ)</span></div><div class="kpi"><b>${elec}/26</b><span>확률과 통계</span></div><div class="kpi"><b>${gradeOf(r.score,ci.cuts)}등급</b><span>예상 등급</span></div></div>
   <div class="section"><h3>예상 등급컷</h3><table class="stats"><tr>${ci.cuts.map((c,g)=>`<th>${g+1}등급</th>`).join('')}</tr><tr>${ci.cuts.map(c=>`<td>${c}점</td>`).join('')}</tr></table><p class="small" style="margin:8px 0 0">${ci.src}</p></div>`;
-  if(weak.length) h+=`<div class="intent" style="margin-bottom:14px"><b>틀린 단원:</b> `+weak.map(c=>`<a href="#" data-u="${c}">${unitBy[c].name}</a>`).join(', ')+`. 틀린 문항은 오늘의 복습에 자동으로 들어갔습니다.</div>`;
+  if(weak.length) h+=`<div class="intent" style="margin-bottom:14px"><b>틀린 단원:</b> `+weak.map(c=>`<a href="#" data-u="${c}">${unitBy[c].name}</a>`).join(', ')+(document.querySelector('nav.tabs button[data-tab=review]').hidden?'.':'. 틀린 문항은 오늘의 복습에 자동으로 들어갔습니다.')+'</div>';
   h+=`<div class="toolbar"><button class="btn" id="backExam">← 모의고사 풀기로</button><button class="btn" id="retake">이 회차 다시 풀기</button><button class="btn" id="printExam">시험지 인쇄</button></div>`;
-  h+='<table class="stats"><tr><th>번호</th><th>배점</th><th>단원</th><th>출처</th><th>내 답</th><th>정답</th><th>결과</th></tr>'+r.ids.map((id,k)=>{const it=byId[id],a=r.ans[id];return `<tr><td>${k+1}</td><td>${it.pts}</td><td>${unitBy[it.code].name}</td><td><a href="#" data-open="${id}">${it.label} ${it.n}번</a></td><td>${a==null||a===''?'-':(it.mc?CIRC[a]:a)}</td><td>${ansText(it)}</td><td>${r.marks[id]?'<span class="st ok">맞음</span>':'<span class="st bad">틀림</span>'}</td></tr>`}).join('')+'</table>';
+  h+='<table class="stats"><tr><th>번호</th><th>배점</th><th>단원</th><th>출처</th><th>내 답</th><th>정답</th><th>결과</th></tr>'+r.ids.map((id,k)=>{const X=xp(id),it=X.it,a=r.ans[id];return `<tr><td>${k+1}</td><td>${it.pts}</td><td>${unitBy[it.code].name}</td><td><a href="#" data-open="${id}">${it.label} ${it.n}번${X.lv?` 변형 ${X.lv}단계`:''}</a></td><td>${a==null||a===''?'-':(X.mc?CIRC[a]:a)}</td><td>${X.atext}</td><td>${r.marks[id]?'<span class="st ok">맞음</span>':'<span class="st bad">틀림</span>'}</td></tr>`}).join('')+'</table>';
   return h;
 }
 function renderPrint(){
-  const P=state.print, list=P.ids.map(id=>byId[id]);
+  const P=state.print, list=P.ids.map(xp);
   return `<div class="unithead"><h2>${P.title}</h2><p>수학 영역 · 30문항 · 100분</p></div>
   <div class="toolbar noprint"><button class="btn" id="backExam">← 모의고사 풀기로</button><button class="btn primary" onclick="window.print()">인쇄 / PDF로 저장</button></div>
-  <div class="plist">`+list.map((i,k)=>`<div class="pitem"><div class="src">${k+1}번 · ${i.pts}점${k===22?' · 확률과 통계':''}</div><img ${QIMG(i.id)} alt=""><div class="mixnote">출처: ${i.label} ${i.n}번</div></div>`).join('')+'</div>'+
-  '<div class="anskey"><b>정답</b><br>'+list.map((i,k)=>`${k+1}. ${ansText(i)}`).join(' &nbsp; ')+'</div>';
+  <div class="plist">`+list.map((X,k)=>`<div class="pitem"><div class="src">${k+1}번 · ${X.it.pts}점${k===22?' · 확률과 통계':''}</div>${X.V?`<div class="vq">${tex(X.V.q)}</div>`:`<img ${QIMG(X.id)} alt="">`}<div class="mixnote">출처: ${X.it.label} ${X.it.n}번${X.lv?` 변형 ${X.lv}단계`:''}</div></div>`).join('')+'</div>'+
+  '<div class="anskey"><b>정답</b><br>'+list.map((X,k)=>`${k+1}. ${X.atext}`).join(' &nbsp; ')+'</div>';
 }
 function render(){
   renderSide();
@@ -544,11 +562,12 @@ function render(){
   m.innerHTML=state.tab==='units'?renderUnits():state.tab==='tags'?renderTags():state.tab==='wrong'?renderWrong():state.tab==='review'?renderReview():state.tab==='exam'?renderExam():state.tab==='result'?renderResult():state.tab==='print'?renderPrint():renderStats();
   const g=s=>document.getElementById(s);
   if(g('startRev')) g('startRev').onclick=()=>{const d=dueIds();if(d.length)openQ(d[0],d)};
-  if(g('mkmix')) g('mkmix').onclick=()=>{const ids=makeMixed({only2022:g('o22').checked,fresh:g('ofresh').checked,weak:g('oweak').checked});if(!ids){alert('조건에 맞게 만들지 못했습니다. 옵션을 바꿔 다시 시도해 주세요.');return}const title=`나만의 모의고사 ${DB.sets.length+1}회`;DB.sets.push({title,ids,t:Date.now()});save();if(confirm(`${title}를 만들었습니다. 지금 풀까요?\n(취소를 누르면 목록에 저장만 합니다)`))startExam(title,ids);else render()};
+  if(g('mkmix')) g('mkmix').onclick=()=>{const lv=g('ovar')?g('ovar').value:'';const ids=makeMixed({only2022:g('o22').checked,fresh:g('ofresh').checked,weak:g('oweak').checked,lv});if(!ids){alert('조건에 맞게 만들지 못했습니다. 옵션을 바꿔 다시 시도해 주세요.');return}const no=1+Math.max(0,...DB.sets.concat(DB.results).map(x=>+((x.title.match(/나만의 모의고사 (\d+)회/)||[])[1]||0)));const title=`나만의 모의고사 ${no}회${lv?` (${LVNAME[lv]})`:''}`;DB.sets.push({title,ids,t:Date.now()});save();if(confirm(`${title}를 만들었습니다. 지금 풀까요?\n(취소를 누르면 목록에 저장만 합니다)`))startExam(title,ids);else render()};
   m.querySelectorAll('[data-exam]').forEach(b=>b.onclick=()=>{if(DB.live&&!confirm('풀던 시험이 있습니다. 새로 시작할까요?'))return;startExam(byId[b.dataset.exam+'_01'].label,examIds(b.dataset.exam))});
+  m.querySelectorAll('[data-setdel]').forEach(b=>b.onclick=()=>{const s=DB.sets[+b.dataset.setdel];if(!confirm(`${s.title}를 목록에서 지울까요?\n이미 푼 점수와 결과는 지난 응시 기록에 그대로 남습니다.`))return;DB.sets.splice(+b.dataset.setdel,1);save();render()});
   m.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{const s=DB.sets[+b.dataset.set];if(DB.live&&!confirm('풀던 시험이 있습니다. 새로 시작할까요?'))return;startExam(s.title,s.ids)});
   m.querySelectorAll('[data-res]').forEach(a=>a.onclick=e=>{e.preventDefault();state.tab='result';state.res=+a.dataset.res;syncTabs();render()});
-  m.querySelectorAll('[data-open]').forEach(a=>a.onclick=e=>{e.preventDefault();const r=DB.results[state.res];const id=a.dataset.open;openQ(id,r.ids,{pick:r.ans[id]??null,ok:!!r.marks[id]})});
+  m.querySelectorAll('[data-open]').forEach(a=>a.onclick=e=>{e.preventDefault();const r=DB.results[state.res];const id=a.dataset.open;openKey(id,r.ids,{pick:r.ans[id]??null,ok:!!r.marks[id]})});
   if(g('resume')) g('resume').onclick=drawExam;
   if(g('quit')) g('quit').onclick=()=>{if(confirm('풀던 시험을 그만둘까요? 답은 저장되지 않습니다.')){delete DB.live;save();render()}};
   if(g('backExam')) g('backExam').onclick=()=>{state.tab='exam';syncTabs();render()};
@@ -624,7 +643,8 @@ function drawQ(){
     if(!cur.ok) right+=vh+`<div class="rel"><h4>${HAS_TAGS?'태그가 비슷한 문제로 한 번 더 연습해 보세요':'같은 단원 문제로 한 번 더 연습해 보세요'}</h4>`+rel.map(relItem).join('')+(HAS_TAGS?'<p class="small" style="margin:4px 0 0">%는 핵심 개념·단원·풀이 전략·난이도·배점·문항 형식 태그가 이 문제와 얼마나 겹치는지입니다.</p>':'')+'</div>';
     else right+=vh+`<div class="rel"><h4>관련 문제</h4>`+rel.slice(0,3).map(relItem).join('')+'</div>';
   }
-  if(cur.seq){const k=cur.seq.indexOf(it.id);right+=`<div style="margin-top:auto;display:flex;gap:8px;justify-content:space-between"><button class="btn" id="prev" ${k<=0?'disabled':''}>← 이전</button><span class="small" style="align-self:center">${k+1} / ${cur.seq.length}</span><button class="btn" id="next" ${k>=cur.seq.length-1?'disabled':''}>다음 →</button></div>`}
+  const ckey=()=>{const k=cur.seq.indexOf(cur.v?it.id+'#'+cur.v:it.id);return k>=0?k:cur.seq.indexOf(it.id)};
+  if(cur.seq){const k=ckey();right+=`<div style="margin-top:auto;display:flex;gap:8px;justify-content:space-between"><button class="btn" id="prev" ${k<=0?'disabled':''}>← 이전</button><span class="small" style="align-self:center">${k+1} / ${cur.seq.length}</span><button class="btn" id="next" ${k>=cur.seq.length-1?'disabled':''}>다음 →</button></div>`}
   const sh=document.getElementById('sheet');
   sh.innerHTML=`<div class="left">${left}</div><div class="right">${right}</div>`;
   sh.querySelector('.close').onclick=closeQ;
@@ -638,11 +658,11 @@ function drawQ(){
   sh.querySelectorAll('.rel .item[data-id]').forEach(el=>el.onclick=()=>{openQ(el.dataset.id,null)});
   sh.querySelectorAll('.rel .item[data-v]').forEach(el=>el.onclick=()=>{openQ(it.id,null,null,+el.dataset.v)});
   sh.querySelectorAll('.chip[data-tag]').forEach(el=>el.onclick=()=>goTag(el.dataset.tag));
-  if(q('#prev')) q('#prev').onclick=()=>{const k=cur.seq.indexOf(it.id);openQ(cur.seq[k-1],cur.seq)};
-  if(q('#next')) q('#next').onclick=()=>{const k=cur.seq.indexOf(it.id);openQ(cur.seq[k+1],cur.seq)};
+  if(q('#prev')) q('#prev').onclick=()=>{const k=ckey();openKey(cur.seq[k-1],cur.seq)};
+  if(q('#next')) q('#next').onclick=()=>{const k=ckey();openKey(cur.seq[k+1],cur.seq)};
   if(cur.preset&&cur.seq){ // reviewing an exam result: move between its questions with their recorded answers
-    const r=DB.results[state.res], go=k=>{const nid=cur.seq[k];openQ(nid,cur.seq,{pick:r.ans[nid]??null,ok:!!r.marks[nid]})};
-    const k=cur.seq.indexOf(it.id);
+    const r=DB.results[state.res], go=k=>{const nid=cur.seq[k];openKey(nid,cur.seq,{pick:r.ans[nid]??null,ok:!!r.marks[nid]})};
+    const k=ckey();
     if(q('#prev')) q('#prev').onclick=()=>go(k-1);
     if(q('#next')) q('#next').onclick=()=>go(k+1);
   }
