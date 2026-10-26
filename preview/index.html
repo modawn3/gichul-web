@@ -268,8 +268,11 @@ function refreshBadges(){
 
 let state={tab:'exam',unit:'A1',year:'all',exam:'all',pts:'all',diff:'all',conc:'all',sw:'all',view:'cards',tsel:[],tg:'c'};
 
+// 'ALL' = 단원 구분 없이 전체 문제
+const ALLU={code:'ALL',name:'전체 문제',subject:'전체',mid:'모든 단원'};
+const inUnit=(i,code)=>code==='ALL'||i.code===code;
 function unitStats(code){
-  const its=ITEMS.filter(i=>i.code===code);
+  const its=ITEMS.filter(i=>inUnit(i,code));
   const tried=its.filter(i=>DB.att[i.id]);
   const ok=tried.filter(i=>last(i.id).ok).length;
   return {n:its.length,tried:tried.length,ok,acc:tried.length?Math.round(ok/tried.length*100):null};
@@ -277,6 +280,7 @@ function unitStats(code){
 function renderSide(){
   const side=document.getElementById('side');
   let h='',subj='',mid='';
+  {const s=unitStats('ALL');h+=`<div class="unit ${state.unit==='ALL'&&state.tab==='units'?'on':''}" data-u="ALL"><span><b>전체 문제</b></span><span class="r">${s.acc!==null?`<span class="acc">${s.acc}%</span>`:''}<span class="badge">${s.n}</span></span></div>`}
   for(const u of UNITS){
     if(u.subject!==subj){subj=u.subject;h+=`<h3>${subj}</h3>`;mid=''}
     if(u.mid!==mid){mid=u.mid;h+=`<h4>${mid}</h4>`}
@@ -287,7 +291,7 @@ function renderSide(){
   side.querySelectorAll('.unit').forEach(el=>el.onclick=()=>{state.unit=el.dataset.u;state.conc='all';state.sw='all';state.tab='units';syncTabs();render()});
 }
 function filtered(){
-  return ITEMS.filter(i=>i.code===state.unit
+  return ITEMS.filter(i=>inUnit(i,state.unit)
     &&(state.year==='all'||i.y==+state.year)
     &&(state.exam==='all'||i.e===state.exam)
     &&(state.pts==='all'||i.pts==+state.pts)
@@ -307,14 +311,14 @@ function examOpts(){
 }
 function renderUnits(){
   if(state.exam!=='all'&&!examOpts().some(o=>o[0]===state.exam))state.exam='all';
-  const u=unitBy[state.unit], list=filtered(), s=unitStats(u.code);
-  let h=`<div class="unithead"><h2>${u.name}</h2><p>${u.subject} › ${u.mid} · 성취기준 ${u.std} · ${u.desc}</p></div>
+  const u=state.unit==='ALL'?ALLU:unitBy[state.unit], list=filtered(), s=unitStats(u.code);
+  let h=`<div class="unithead"><h2>${u.name}</h2><p>${u.code==='ALL'?'단원 구분 없이 모든 문항을 봅니다. 위 칸으로 연도·시험·배점·난이도·핵심 개념을 골라 좁힐 수 있습니다.':`${u.subject} › ${u.mid} · 성취기준 ${u.std} · ${u.desc}`}</p></div>
   <div class="toolbar">
    ${sel('year',[['all','전체 연도'],['2024','2024년 시행'],['2025','2025년 시행'],['2026','2026년 시행']],state.year)}
    ${sel('exam',[['all','전체 시험'],...examOpts()],state.exam)}
    ${sel('pts',[['all','전체 배점'],['2','2점'],['3','3점'],['4','4점']],state.pts)}
    ${HAS_TAGS?sel('diff',[['all','전체 난이도'],['hi','난이도 상'],['mid','난이도 중'],['lo','난이도 하']],state.diff):''}
-   ${HAS_TAGS?sel('conc',[['all','전체 핵심 개념'],...[...new Set(ITEMS.filter(i=>i.code===u.code).map(i=>tg(i.id).c))].filter(Boolean).sort().map(c=>[c,TD.c[c]])],state.conc):''}
+   ${HAS_TAGS?sel('conc',[['all','전체 핵심 개념'],...[...new Set(ITEMS.filter(i=>inUnit(i,u.code)).map(i=>tg(i.id).c))].filter(Boolean).sort().map(c=>[c,TD.c[c]])],state.conc):''}
    <button class="btn ${state.view==='cards'?'primary':''}" data-v="cards">카드로 보기</button>
    <button class="btn ${state.view==='list'?'primary':''}" data-v="list">일괄 보기·인쇄</button>
    <button class="btn" id="startSet">이 단원 차례로 풀기</button>
@@ -322,7 +326,7 @@ function renderUnits(){
   </div>`;
   if(!list.length) h+='<div class="empty">조건에 맞는 문항이 없습니다.</div>';
   else if(state.view==='cards'){
-    h+='<div class="grid">'+list.map(i=>`<div class="card" data-id="${i.id}"><div class="meta"><span><b>${i.label}</b> ${i.n}번 <span class="pt">${i.pts}점</span>${ddBadge(i.id)}</span>${stBadge(i.id)}</div><div class="thumb"><img loading="lazy" ${QIMG(i.id)} alt=""></div></div>`).join('')+'</div>';
+    h+='<div class="grid">'+list.map(i=>`<div class="card" data-id="${i.id}"><div class="meta"><span><b>${i.label}</b> ${i.n}번 <span class="pt">${i.pts}점${u.code==='ALL'?' · '+unitBy[i.code].name:''}</span>${ddBadge(i.id)}</span>${stBadge(i.id)}</div><div class="thumb"><img loading="lazy" ${QIMG(i.id)} alt=""></div></div>`).join('')+'</div>';
   }else{
     h+=`<div class="toolbar noprint"><button class="btn primary" onclick="window.print()">인쇄 / PDF로 저장</button><label class="small"><input type="checkbox" id="withKey" ${state.withKey?'checked':''}> 마지막에 정답표 넣기</label></div>
     <div class="plist">`+list.map((i,k)=>`<div class="pitem"><div class="src">[${k+1}] ${i.label} ${i.n}번 · ${i.pts}점</div><img ${QIMG(i.id)} alt=""></div>`).join('')+'</div>';
