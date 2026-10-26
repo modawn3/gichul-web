@@ -198,7 +198,7 @@ const HAS_TAGS=!!window.TAGS;
 const DN={hi:'상',mid:'중',lo:'하'}, DORD={lo:0,mid:1,hi:2};
 const NOTAG={c:null,s:[],f:[],d:null,r:null,w:[]};
 function tg(id){const t=TAGS[id]||NOTAG;if(!t.w)t.w=[];return t}
-const WN=k=>TD.w&&TD.w[k]?'수능완성 '+TD.w[k]:k;   // 2027 EBS 수능완성 유형편의 유형 이름
+const WN=k=>TD.w&&TD.w[k]?TD.w[k].replace(/^유형\d+\s*/,''):k;   // 2027 EBS 수능완성 유형편의 유형 이름(앞의 '유형N'은 빼고 이름만)
 const DF={};
 ITEMS.forEach(i=>{const t=tg(i.id);t.s.forEach(x=>DF['s:'+x]=(DF['s:'+x]||0)+1);t.f.forEach(x=>DF['f:'+x]=(DF['f:'+x]||0)+1)});
 const IDF=k=>Math.log((ITEMS.length+1)/((DF[k]||0)+1));   // a rarer strategy/format says more about two items being alike
