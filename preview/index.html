@@ -142,27 +142,50 @@ body.notags .chip[data-tag]{cursor:default}body.notags .chip[data-tag]:hover{bor
 .layout.noside{grid-template-columns:1fr}.layout.noside aside{display:none}
 @media print{header,aside,.toolbar,.noprint{display:none!important}.layout{display:block}main{padding:0}body{background:#fff}.plist .pitem{border:0;border-bottom:1px solid #ccc;border-radius:0}}
 @media (max-width:820px){.layout{grid-template-columns:1fr}aside{position:static;max-height:none}.sheet{grid-template-columns:1fr}.sheet .left{border-right:0}}
-/* 실제 시험지 양식 인쇄(A4, 2단): 인쇄할 때만 #paper가 보이고 나머지는 숨는다 */
+/* 실제 시험지 양식 인쇄(A4 세로, 2단, 단마다 문항 2개와 풀이 공간): 인쇄할 때만 #paper가 보이고 나머지는 숨는다 */
 #paper{display:none}
-@page{size:A4;margin:14mm 12mm 14mm 12mm;@bottom-center{content:counter(page);font-size:9pt}}
-@media print{body.paper-print>*:not(#paper){display:none!important}body.paper-print #paper{display:block}body.paper-print{background:#fff}}
-#paper{font-family:'Nanum Myeongjo','NanumMyeongjo','Batang','바탕',serif;font-size:10.5pt;line-height:1.75;color:#000;background:#fff}
-#paper .ph{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2.5px solid #000;padding-bottom:4px;margin-bottom:2px;font-size:9.5pt}
-#paper .ph .t{font-size:20pt;font-weight:700;letter-spacing:6px}
-#paper .ph .box2{border:1.5px solid #000;padding:2px 10px;font-weight:700}
-#paper .who{display:flex;gap:24px;justify-content:flex-end;font-size:9.5pt;margin:4px 0 2px}
-#paper .who span{border-bottom:1px solid #000;min-width:120px;display:inline-block}
-#paper .sub{text-align:center;font-size:10pt;margin:4px 0 6px}
-#paper .sec{border-top:2.5px solid #000;border-bottom:1px solid #000;padding:3px 0;margin:6px 0 10px;font-weight:700;text-align:center;font-size:12pt}
-#paper .cols{column-count:2;column-gap:9mm;column-rule:1px solid #000}
-#paper .q{break-inside:avoid;margin:0 0 28px}
-#paper .q img{display:block;max-width:100%}
-#paper .qn{font-weight:700;font-size:11.5pt}
-#paper .vq{font-family:inherit;font-size:10.5pt;line-height:1.75;padding:0;background:none}
-#paper .pb{break-before:page}
-#paper table.ans{border-collapse:collapse;width:100%;margin:6px 0 14px}
-#paper table.ans td,#paper table.ans th{border:1px solid #000;padding:3px 4px;text-align:center;font-size:9.5pt}
-#paper .src{font-size:8.5pt;color:#444;margin-top:8px}
+#pmeasure{position:absolute;left:-10000px;top:0;width:88mm;visibility:hidden}
+@page{size:A4;margin:10mm 11mm 9mm 11mm}
+@media print{body.paper-print>*:not(#paper){display:none!important}body.paper-print #paper{display:block}body.paper-print{background:#fff;margin:0}}
+#paper,#pmeasure{font-family:'Nanum Myeongjo','NanumMyeongjo','Batang','바탕',serif;font-size:10pt;line-height:1.75;color:#000;background:#fff}
+#paper .pg{width:188mm;height:277mm;display:flex;flex-direction:column;break-after:page;overflow:hidden;position:relative}
+#paper .pg:last-child{break-after:auto}
+#paper .ph{display:flex;justify-content:space-between;align-items:center;border-bottom:1.5px solid #000;padding:0 2mm 2mm;height:12mm}
+#paper .ph .t{font-size:17pt;font-weight:700;letter-spacing:3px}
+#paper .ph .no{font-size:15pt;min-width:12mm}
+#paper .ph .gr{border:1.2px solid #000;border-radius:9px;padding:0 9px;font-size:9.5pt;font-weight:700}
+#paper .ph1{border-bottom:1.5px solid #000;padding:0 2mm 2mm}
+#paper .ph1 .top{display:flex;justify-content:space-between;align-items:baseline}
+#paper .ph1 .top .tt{flex:1;text-align:center;font-size:13pt;font-weight:700}
+#paper .ph1 .top .no{font-size:15pt}
+#paper .ph1 .mid{display:flex;align-items:center;justify-content:space-between;margin-top:3px}
+#paper .ph1 .mid .gy{border:1.2px solid #000;border-radius:12px;padding:1px 12px;font-size:11pt}
+#paper .ph1 .mid .t{font-size:22pt;font-weight:700;letter-spacing:4px}
+#paper .ph1 .mid .who{font-size:9pt;text-align:right;line-height:1.9}
+#paper .ph1 .mid .who span{display:inline-block;min-width:30mm;border-bottom:1px solid #000}
+#paper .pbody{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+#paper .col{display:flex;flex-direction:column;padding:3mm 3mm 0 1mm;min-height:0}
+#paper .col+.col{border-left:1px solid #000;padding:3mm 1mm 0 4mm}
+#paper .slot{flex:0 0 50%;overflow:hidden}
+#paper .slot.full{flex-basis:100%}
+#paper .pf{height:7mm;display:flex;justify-content:center;align-items:flex-end}
+#paper .pf span{border:1px solid #000;padding:0 8px;font-size:8.5pt;font-family:sans-serif}
+#paper .lbl,#pmeasure .lbl{display:table;border:1.2px solid #000;background:#eee;padding:0 14px;font-family:sans-serif;font-weight:700;font-size:9.5pt;letter-spacing:3px;margin:0 0 6px}
+#paper .sec2{text-align:center;font-weight:700;font-size:12pt;border:1.2px solid #000;margin:2mm 0 0;padding:1px 0}
+#paper .q img,#pmeasure .q img{display:block;max-width:100%}
+#paper .qn,#pmeasure .qn{font-weight:700;font-style:italic;font-size:11pt}
+#paper .vq,#pmeasure .vq{font-family:inherit;font-size:10pt;line-height:1.75;padding:0;background:none}
+#paper .flow{break-before:page}
+#paper .flow h2{font-size:15pt;text-align:center;margin:0 0 2mm;border-bottom:1.5px solid #000;padding-bottom:2mm}
+#paper table.ans{border-collapse:collapse;width:100%;margin:4mm 0}
+#paper table.ans td,#paper table.ans th{border:1px solid #000;padding:3px 2px;text-align:center;font-size:9pt}
+#paper .src{font-size:8pt;color:#333;margin:2mm 0 4mm;line-height:1.6}
+#paper .sols{column-count:2;column-gap:8mm;column-rule:1px solid #000;font-size:9pt;line-height:1.6}
+#paper .sol{margin:0 0 5mm}
+#paper .sol .sh{font-weight:700;border-bottom:1px solid #000;margin-bottom:2px;break-after:avoid}
+#paper .sol .it{font-size:8.5pt;color:#333;margin:2px 0}
+#paper .sol img{display:block;max-width:100%;break-inside:avoid;margin:2px 0}
+#paper .sol .vq{font-size:9pt;line-height:1.65}
 .exlist .setitem{position:relative}.exlist .setitem>button[data-set],.exlist .setitem>button[data-exam]{width:100%;height:100%;padding-bottom:38px}
 .exlist .setact{position:absolute;bottom:8px;right:8px;display:flex;gap:4px}
 .exlist .setact button{padding:2px 8px;font-size:12px;border-color:var(--line)}
@@ -573,32 +596,65 @@ function renderResult(){
   h+='<table class="stats"><tr><th>번호</th><th>배점</th><th>단원</th><th>출처</th><th>내 답</th><th>정답</th><th>결과</th></tr>'+r.ids.map((id,k)=>{const X=xp(id),it=X.it,a=r.ans[id];return `<tr><td>${k+1}</td><td>${it.pts}</td><td>${unitBy[it.code].name}</td><td><a href="#" data-open="${id}">${it.label} ${it.n}번${X.lv?` 변형 ${X.lv}단계`:''}</a></td><td>${a==null||a===''?'-':(X.mc?CIRC[a]:a)}</td><td>${X.atext}</td><td>${r.marks[id]?'<span class="st ok">맞음</span>':'<span class="st bad">틀림</span>'}</td></tr>`}).join('')+'</table>';
   return h;
 }
-// ---- 실제 시험지 양식 인쇄: 공통 1~22(2단) → 쪽 넘김 → 확률과 통계 23~30 → 쪽 넘김 → 정답표 ----
+// ---- 실제 시험지 양식 인쇄 ----
+// 시험지처럼 A4 한 쪽을 2단으로 나누고 단마다 문항 2개(위·아래 반씩)를 놓아 아래쪽을 풀이 공간으로 남긴다.
+// 반 단에 안 들어가는 긴 문항은 한 단을 다 쓴다. 공통 1~22 → 새 쪽에서 확률과 통계 23~30 → 정답표 → 해설.
+function solAttrs(id){return SIMG(id)}
 function paperQ(x,k){
   const X=xp(x),it=X.it;
-  if(!X.V) return `<div class="q"><img ${QIMG(X.id)} alt="${k+1}번"></div>`;   // 원문항 그림에는 번호·배점이 들어 있다
+  const lbl=k===0||k===22?'<div class="lbl">5지선다형</div>':(k===15||k===28)?'<div class="lbl">단답형</div>':'';
+  if(!X.V) return `<div class="q">${lbl}<img ${QIMG(X.id)} alt="${k+1}번"></div>`;   // 원문항 그림에는 번호·배점이 들어 있다
   let q=tex(X.V.q); const pts=` <span style="white-space:nowrap">[${it.pts}점]</span>`, i=q.indexOf('<div class=\'ch');
   q=i>=0?q.slice(0,i)+pts+q.slice(i):q+pts;
-  return `<div class="q"><span class="qn">${k+1}.</span> <span class="vq">${q}</span></div>`;
+  return `<div class="q">${lbl}<span class="qn">${k+1}.</span> <span class="vq">${q}</span></div>`;
 }
-function paperHTML(title,ids,sub){
-  const xs=ids.map(xp), anyV=xs.some(X=>X.lv);
-  const head=(sec)=>`<div class="ph"><span class="box2">제 2 교시</span><span class="t">수학 영역</span><span>${sec}</span></div>`;
+function paperRest(title,ids){
+  const xs=ids.map(xp), anyV=xs.some(X=>X.lv), r=(a,b)=>Array.from({length:b-a},(_,i)=>a+i);
   const ansT=rng=>`<table class="ans"><tr><th>번호</th>${rng.map(k=>`<th>${k+1}</th>`).join('')}</tr><tr><th>정답</th>${rng.map(k=>`<td>${xs[k].atext}</td>`).join('')}</tr><tr><th>배점</th>${rng.map(k=>`<td>${xs[k].it.pts}</td>`).join('')}</tr>${anyV?`<tr><th>구분</th>${rng.map(k=>`<td>${xs[k].lv?xs[k].lv+'단계':'원'}</td>`).join('')}</tr>`:''}</table>`;
-  const r=(a,b)=>Array.from({length:b-a},(_,i)=>a+i);
-  return head('공통과목')+`<div class="who">성명 <span></span> 수험 번호 <span></span></div><div class="sub">${sub}</div><div class="sec">공통과목 (대수 · 미적분Ⅰ)</div><div class="cols">${r(0,22).map(k=>paperQ(ids[k],k)).join('')}</div>`
-    +`<div class="pb"></div>`+head('선택과목')+`<div class="sec">선택과목 (확률과 통계)</div><div class="cols">${r(22,ids.length).map(k=>paperQ(ids[k],k)).join('')}</div>`
-    +`<div class="pb"></div>`+head('정답')+`<div class="sub">${title} 정답</div>${ansT(r(0,15))}${ansT(r(15,ids.length))}`
-    +`<div class="src">출처: ${xs.map((X,k)=>`${k+1}. ${X.it.label} ${X.it.n}번${X.lv?` 변형 ${X.lv}단계`:''}`).join(' · ')}</div>`;
+  const sol=(X,k)=>`<div class="sol"><div class="sh">${k+1}번 · 정답 ${X.atext}</div><div class="it">${X.it.label} ${X.it.n}번${X.lv?` 변형 ${X.lv}단계`:''} · ${unitBy[X.it.code].name}${X.V?'':` · 출제의도: ${X.it.intent}`}</div>`
+    +(X.V?`<div class="vq">${tex(X.V.sol)}</div>`:(solAttrs(X.id).map(a=>`<img ${a} alt="해설">`).join('')||'<p>해설 그림이 없습니다.</p>'))+'</div>';
+  return `<div class="flow"><h2>${title} 정답</h2>${ansT(r(0,15))}${ansT(r(15,ids.length))}<div class="src">출처: ${xs.map((X,k)=>`${k+1}. ${X.it.label} ${X.it.n}번${X.lv?` 변형 ${X.lv}단계`:''}`).join(' · ')}</div></div>`
+    +`<div class="flow"><h2>${title} 해설</h2><div class="sols">${xs.map(sol).join('')}</div></div>`;
 }
-// 그림(웹 버전은 서명된 주소)이 다 받아진 뒤 인쇄 창을 연다. 인쇄 창에서 'PDF로 저장'을 고르면 PDF가 된다.
+// 문항 높이를 재서 쪽을 짠다: 반 단(slot)에 들어가면 반, 아니면 한 단 전체, 그래도 넘치면 줄여서 넣는다.
+function paperPages(title,sub,qs){
+  const MM=96/25.4, colH=(277-12-7-3)*MM, firstH=(277-27-7-3)*MM;
+  const pages=[]; let cur=null;
+  const newPage=sec=>{cur={cols:[[],[]],c:0,used:0,sec,first:!pages.length};pages.push(cur)};
+  const place=(el,h,sec)=>{
+    if(!cur||cur.sec!==sec)newPage(sec);
+    const H=cur.first?firstH:colH, full=h>H/2-4;
+    if(cur.used+(full?2:1)>2){cur.c++;cur.used=0;if(cur.c>1){newPage(sec)}}
+    const H2=cur.first?firstH:colH;
+    if(h>H2)el.style.zoom=(H2/h).toFixed(3);
+    cur.cols[cur.c].push(`<div class="slot${full?' full':''}">${el.outerHTML}</div>`);cur.used+=full?2:1;
+  };
+  qs.forEach(([el,h,sec])=>place(el,h,sec));
+  const N=pages.length;
+  return pages.map((p,k)=>{
+    const head=p.first?`<div class="ph1"><div class="top"><span style="min-width:12mm"></span><span class="tt">${sub}</span><span class="no">${k+1}</span></div><div class="mid"><span class="gy">제 2 교시</span><span class="t">수학 영역</span><span class="who">성명 <span></span><br>수험 번호 <span></span></span></div></div>`
+      :`<div class="ph">${k%2?`<span class="no">${k+1}</span><span class="t">수학 영역</span><span class="gr">고3</span>`:`<span class="gr">고3</span><span class="t">수학 영역</span><span class="no" style="text-align:right">${k+1}</span>`}</div>`;
+    const sec=p.sec&&(k===0||pages[k-1].sec!==p.sec)?`<div class="sec2">선택과목 (확률과 통계)</div>`:'';
+    return `<div class="pg">${head}${sec}<div class="pbody"><div class="col">${p.cols[0].join('')}</div><div class="col">${p.cols[1].join('')}</div></div><div class="pf"><span>${k+1} / ${N}</span></div></div>`;
+  }).join('');
+}
+// 그림(웹 버전은 서명된 주소)이 다 받아진 뒤 쪽을 짜고 인쇄 창을 연다. 인쇄 창에서 'PDF로 저장'을 고르면 PDF가 된다.
 function printPaper(title,ids,sub){
-  const P=document.getElementById('paper'); P.innerHTML=paperHTML(title,ids,sub||title);
-  document.body.classList.add('paper-print');
-  const t0=Date.now(), oldTitle=document.title; document.title=title;
-  const ready=()=>[...P.querySelectorAll('img')].every(im=>im.complete&&im.naturalWidth>1);
-  const go=()=>{window.print();document.title=oldTitle;setTimeout(()=>document.body.classList.remove('paper-print'),500)};
-  (function wait(){if(ready()||Date.now()-t0>20000)go();else setTimeout(wait,200)})();
+  const P=document.getElementById('paper');
+  let M=document.getElementById('pmeasure'); if(!M){M=document.createElement('div');M.id='pmeasure';document.body.appendChild(M)}
+  M.innerHTML=ids.map((x,k)=>paperQ(x,k)).join('');
+  P.innerHTML=paperRest(title,ids);   // 해설 그림도 미리 받기 시작
+  const t0=Date.now(), oldTitle=document.title;
+  const ready=()=>[...M.querySelectorAll('img'),...P.querySelectorAll('img')].every(im=>im.complete&&im.naturalWidth>1);
+  const go=()=>{
+    const qs=[...M.children].map((el,k)=>[el,el.getBoundingClientRect().height,k>=22?1:0]);
+    P.innerHTML=paperPages(title,sub||title,qs)+paperRest(title,ids); M.innerHTML='';
+    const imgs=[...P.querySelectorAll('img')];
+    Promise.all(imgs.map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r}))).then(()=>{
+      document.body.classList.add('paper-print');document.title=title;window.print();document.title=oldTitle;
+      setTimeout(()=>document.body.classList.remove('paper-print'),500)});
+  };
+  (function wait(){if(ready()||Date.now()-t0>30000)go();else setTimeout(wait,200)})();
 }
 function renderPrint(){
   const P=state.print, list=P.ids.map(xp);
