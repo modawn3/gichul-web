@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>수능 수학 기출 학습</title>
 <link rel="stylesheet" href="katex.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap">
 <style>
 :root{--bg:#f6f7f9;--panel:#fff;--line:#e2e5ea;--text:#1d2330;--muted:#6b7385;--accent:#2f6fde;--accent-soft:#e8f0fd;--ok:#1f9d55;--ok-soft:#e6f6ec;--bad:#d64545;--bad-soft:#fdeceb;--warn:#b7791f;--warn-soft:#fdf5e6}
 *{box-sizing:border-box}
@@ -90,8 +91,7 @@ table.stats th{background:var(--bg);font-weight:600;color:var(--muted);font-size
 .exlist button{font:inherit;font-size:14px;text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer}
 .exlist button:hover{border-color:var(--accent)}
 .exlist .sub{display:block;font-size:12px;color:var(--muted);margin-top:2px}
-.exlist .setitem{position:relative}.exlist .setitem>button[data-set]{width:100%;height:100%;padding-right:54px}
-.exlist .setdel{position:absolute;top:8px;right:8px;padding:2px 8px;font-size:12px;color:var(--bad);border-color:var(--line)}
+.exlist .setdel{color:var(--bad)}
 .exlist .setdel:hover{border-color:var(--bad);background:var(--bad-soft)}
 .opts{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0;font-size:14px}
 .timer{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums}
@@ -142,6 +142,56 @@ body.notags .chip[data-tag]{cursor:default}body.notags .chip[data-tag]:hover{bor
 .layout.noside{grid-template-columns:1fr}.layout.noside aside{display:none}
 @media print{header,aside,.toolbar,.noprint{display:none!important}.layout{display:block}main{padding:0}body{background:#fff}.plist .pitem{border:0;border-bottom:1px solid #ccc;border-radius:0}}
 @media (max-width:820px){.layout{grid-template-columns:1fr}aside{position:static;max-height:none}.sheet{grid-template-columns:1fr}.sheet .left{border-right:0}}
+/* 실제 시험지 양식 인쇄(A4 세로, 2단, 단마다 문항 2개와 풀이 공간): 인쇄할 때만 #paper가 보이고 나머지는 숨는다 */
+#paper{display:none}
+#pmeasure{position:absolute;left:-10000px;top:0;width:88mm;visibility:hidden}
+@page{size:A4;margin:10mm 11mm 9mm 11mm}
+@media print{body.paper-print>*:not(#paper){display:none!important}body.paper-print #paper{display:block}body.paper-print{background:#fff;margin:0}}
+#paper,#pmeasure{font-family:'Nanum Myeongjo','NanumMyeongjo','Batang','바탕',serif;font-size:10pt;line-height:1.75;color:#000;background:#fff}
+#paper .pg{width:188mm;height:277mm;display:flex;flex-direction:column;break-after:page;overflow:hidden;position:relative}
+#paper .pg:last-child{break-after:auto}
+#paper .ph{display:flex;justify-content:space-between;align-items:center;border-bottom:1.5px solid #000;padding:0 2mm 2mm;height:12mm}
+#paper .ph .t{font-size:17pt;font-weight:700;letter-spacing:3px}
+#paper .ph .no{font-size:15pt;min-width:12mm}
+#paper .ph .gr{border:1.2px solid #000;border-radius:9px;padding:0 9px;font-size:9.5pt;font-weight:700}
+#paper .ph1{border-bottom:1.5px solid #000;padding:0 2mm 2mm}
+#paper .ph1 .top{display:flex;justify-content:space-between;align-items:baseline}
+#paper .ph1 .top .tt{flex:1;text-align:center;font-size:13pt;font-weight:700}
+#paper .ph1 .top .no{font-size:15pt}
+#paper .ph1 .mid{display:flex;align-items:center;justify-content:space-between;margin-top:3px}
+#paper .ph1 .mid .gy{border:1.2px solid #000;border-radius:12px;padding:1px 12px;font-size:11pt}
+#paper .ph1 .mid .t{font-size:22pt;font-weight:700;letter-spacing:4px}
+#paper .ph1 .mid .who{font-size:9pt;text-align:right;line-height:1.9}
+#paper .ph1 .mid .who span{display:inline-block;min-width:30mm;border-bottom:1px solid #000}
+#paper .pbody{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+#paper .col{display:flex;flex-direction:column;padding:3mm 3mm 0 1mm;min-height:0}
+#paper .col+.col{border-left:1px solid #000;padding:3mm 1mm 0 4mm}
+#paper .cin{position:relative;flex:1;display:flex;flex-direction:column;min-height:0}
+#paper .slot{flex:0 0 50%;overflow:hidden}
+#paper .slot.abs{position:absolute;left:0;right:0;overflow:hidden}
+#paper .slot.full{flex-basis:100%}
+#paper .pf{height:7mm;display:flex;justify-content:center;align-items:flex-end}
+#paper .pf span{border:1px solid #000;padding:0 8px;font-size:8.5pt;font-family:sans-serif}
+#paper .lbl,#pmeasure .lbl{display:table;border:1.2px solid #000;background:#eee;padding:0 14px;font-family:sans-serif;font-weight:700;font-size:9.5pt;letter-spacing:3px;margin:0 0 6px}
+#paper .sec2{text-align:center;font-weight:700;font-size:12pt;border:1.2px solid #000;margin:2mm 0 0;padding:1px 0}
+#paper .q img,#pmeasure .q img{display:block;max-width:100%}
+#paper .qn,#pmeasure .qn{font-weight:700;font-style:italic;font-size:11pt}
+#paper .vq,#pmeasure .vq{font-family:inherit;font-size:10pt;line-height:1.75;padding:0;background:none}
+#paper .flow{break-before:page}
+#paper .flow h2{font-size:15pt;text-align:center;margin:0 0 2mm;border-bottom:1.5px solid #000;padding-bottom:2mm}
+#paper table.ans{border-collapse:collapse;width:100%;margin:4mm 0}
+#paper table.ans td,#paper table.ans th{border:1px solid #000;padding:3px 2px;text-align:center;font-size:9pt}
+#paper .src{font-size:8pt;color:#333;margin:2mm 0 4mm;line-height:1.6}
+#paper .sols{column-count:2;column-gap:8mm;column-rule:1px solid #000;font-size:9pt;line-height:1.6}
+#paper .sol{margin:0 0 5mm}
+#paper .sol .sh{font-weight:700;border-bottom:1px solid #000;margin-bottom:2px;break-after:avoid}
+#paper .sol .it{font-size:8.5pt;color:#333;margin:2px 0}
+#paper .sol img{display:block;max-width:100%;break-inside:avoid;margin:2px 0}
+#paper .sol .vq{font-size:9pt;line-height:1.65}
+.exlist .setitem{position:relative}.exlist .setitem>button[data-set],.exlist .setitem>button[data-exam]{width:100%;height:100%;padding-bottom:38px}
+.exlist .setact{position:absolute;bottom:8px;right:8px;display:flex;gap:4px}
+.exlist .setact button{padding:2px 8px;font-size:12px;border-color:var(--line)}
+.exlist .setprt{color:var(--accent)}.exlist .setprt:hover{border-color:var(--accent);background:var(--accent-soft)}
 </style>
 </head>
 <body>
@@ -163,6 +213,7 @@ body.notags .chip[data-tag]{cursor:default}body.notags .chip[data-tag]:hover{bor
   <main id="main"></main>
 </div>
 <div class="overlay" id="ov"><div class="sheet" id="sheet"></div></div>
+<div id="paper"></div>
 
 <script src="supabase.js"></script>
 <script src="config.js"></script>
@@ -447,12 +498,12 @@ function SHOW22(){return Date.now()>=new Date(2026,10,20).getTime()}
 function renderExam(){
   let h=`<div class="unithead"><h2>모의고사 풀기</h2><p>30문항(공통 22 + 확률과 통계 8)을 100분 동안 풀고 한꺼번에 채점합니다. 채점 뒤 문항을 누르면 해설을 볼 수 있습니다.</p></div>`;
   if(DB.live) h+=`<div class="section"><h3>풀던 시험이 있습니다</h3><p class="small">${DB.live.title} · 답한 문항 ${Object.keys(DB.live.ans).length}/30</p><div class="toolbar"><button class="btn primary" id="resume">이어서 풀기</button><button class="btn" id="quit">그만두기</button></div></div>`;
-  h+=`<div class="section"><h3>기존 회차로 풀기</h3><div class="exlist">`+EXAMS.map(e=>`<button data-exam="${e}">${byId[e+'_01'].label}<span class="sub">${bestOf(byId[e+'_01'].label)}</span></button>`).join('')+'</div></div>';
+  h+=`<div class="section"><h3>기존 회차로 풀기</h3><div class="exlist">`+EXAMS.map(e=>`<div class="setitem"><button data-exam="${e}">${byId[e+'_01'].label}<span class="sub">${bestOf(byId[e+'_01'].label)}</span></button><span class="setact"><button class="setprt" data-prtexam="${e}" title="실제 시험지 양식으로 인쇄·PDF 저장">시험지 PDF</button></span></div>`).join('')+'</div></div>';
   h+=`<div class="section"><h3>섞어서 새 회차 만들기</h3><p class="small">여러 회차의 문항을 섞어 한 회분을 새로 만듭니다. 각 번호는 다른 회차의 같은 번호 문항에서 가져오므로 배점(2·3·4점)과 문항 유형이 실제 시험과 같고, 단원별 문항 수도 실제 시험 범위 안에서 맞춥니다. 모든 중단원이 한 문항 이상 들어갑니다.</p>
    <div class="opts"><label ${SHOW22()?'':'hidden'}><input type="checkbox" id="o22" ${SHOW22()?'checked':''}> 2022 개정 범위만 (원순열 빼기)</label><label><input type="checkbox" id="ofresh" checked> 안 푼 문제 먼저</label><label><input type="checkbox" id="oweak"> 약한 단원·틀린 문제 더 넣기</label></div>
    ${Object.keys(VARS).length?`<div class="opts"><label>문항: <select id="ovar"><option value="">기출 원문항 그대로</option><option value="1">변형 1단계 (숫자 바꾸기)</option><option value="2">변형 2단계 (조건·발문 바꾸기)</option><option value="3">변형 3단계 (구조 바꾸기)</option><option value="mix">혼합 변형 (쉬운 번호 1단계·중간 2단계·어려운 번호 3단계)</option></select></label></div>`:''}
    <div class="toolbar"><button class="btn primary" id="mkmix">새 회차 만들기</button></div></div>`;
-  if(DB.sets.length) h+=`<div class="section"><h3>내가 만든 회차</h3><div class="exlist">`+DB.sets.map((s,k)=>`<div class="setitem"><button data-set="${k}">${s.title}<span class="sub">${fmtDate(s.t)} 만듦 · ${bestOf(s.title)}</span></button><button class="setdel" data-setdel="${k}" title="이 회차를 목록에서 지우기">삭제</button></div>`).join('')+'</div></div>';
+  if(DB.sets.length) h+=`<div class="section"><h3>내가 만든 회차</h3><div class="exlist">`+DB.sets.map((s,k)=>`<div class="setitem"><button data-set="${k}">${s.title}<span class="sub">${fmtDate(s.t)} 만듦 · ${bestOf(s.title)}</span></button><span class="setact"><button class="setprt" data-prtset="${k}" title="실제 시험지 양식으로 인쇄·PDF 저장">시험지 PDF</button><button class="setdel" data-setdel="${k}" title="이 회차를 목록에서 지우기">삭제</button></span></div>`).join('')+'</div></div>';
   if(DB.results.length) h+=`<div class="section"><h3>지난 응시 기록</h3><table class="stats"><tr><th>날짜</th><th>회차</th><th>점수</th><th>맞은 문항</th><th>걸린 시간</th><th></th></tr>`+DB.results.map((r,k)=>[r,k]).reverse().map(([r,k])=>`<tr><td>${fmtDate(r.t)}</td><td>${r.title}</td><td><b>${r.score}</b>점</td><td>${r.ok}/30</td><td>${Math.round(r.secs/60)}분</td><td><a href="#" data-res="${k}">결과 보기</a></td></tr>`).join('')+'</table></div>';
   return h;
 }
@@ -547,6 +598,97 @@ function renderResult(){
   h+='<table class="stats"><tr><th>번호</th><th>배점</th><th>단원</th><th>출처</th><th>내 답</th><th>정답</th><th>결과</th></tr>'+r.ids.map((id,k)=>{const X=xp(id),it=X.it,a=r.ans[id];return `<tr><td>${k+1}</td><td>${it.pts}</td><td>${unitBy[it.code].name}</td><td><a href="#" data-open="${id}">${it.label} ${it.n}번${X.lv?` 변형 ${X.lv}단계`:''}</a></td><td>${a==null||a===''?'-':(X.mc?CIRC[a]:a)}</td><td>${X.atext}</td><td>${r.marks[id]?'<span class="st ok">맞음</span>':'<span class="st bad">틀림</span>'}</td></tr>`}).join('')+'</table>';
   return h;
 }
+// ---- 실제 시험지 양식 인쇄 ----
+// 시험지처럼 A4 한 쪽을 2단으로 나누고 단마다 문항 2개(위·아래 반씩)를 놓아 아래쪽을 풀이 공간으로 남긴다.
+// 반 단에 안 들어가는 긴 문항은 한 단을 다 쓴다. 공통 1~22 → 새 쪽에서 확률과 통계 23~30 → 정답표 → 해설.
+function solAttrs(id){return SIMG(id)}
+function paperQ(x,k){
+  const X=xp(x),it=X.it;
+  const lbl=k===0||k===22?'<div class="lbl">5지선다형</div>':(k===15||k===28)?'<div class="lbl">단답형</div>':'';
+  if(!X.V) return `<div class="q">${lbl}<img ${QIMG(X.id)} alt="${k+1}번"></div>`;   // 원문항 그림에는 번호·배점이 들어 있다
+  let q=tex(X.V.q); const pts=` <span style="white-space:nowrap">[${it.pts}점]</span>`, i=q.indexOf('<div class=\'ch');
+  q=i>=0?q.slice(0,i)+pts+q.slice(i):q+pts;
+  return `<div class="q">${lbl}<span class="qn">${k+1}.</span> <span class="vq">${q}</span></div>`;
+}
+function paperRest(title,ids){
+  const xs=ids.map(xp), anyV=xs.some(X=>X.lv), r=(a,b)=>Array.from({length:b-a},(_,i)=>a+i);
+  const ansT=rng=>`<table class="ans"><tr><th>번호</th>${rng.map(k=>`<th>${k+1}</th>`).join('')}</tr><tr><th>정답</th>${rng.map(k=>`<td>${xs[k].atext}</td>`).join('')}</tr><tr><th>배점</th>${rng.map(k=>`<td>${xs[k].it.pts}</td>`).join('')}</tr>${anyV?`<tr><th>구분</th>${rng.map(k=>`<td>${xs[k].lv?xs[k].lv+'단계':'원'}</td>`).join('')}</tr>`:''}</table>`;
+  const sol=(X,k)=>`<div class="sol"><div class="sh">${k+1}번 · 정답 ${X.atext}</div><div class="it">${X.it.label} ${X.it.n}번${X.lv?` 변형 ${X.lv}단계`:''} · ${unitBy[X.it.code].name}${X.V?'':` · 출제의도: ${X.it.intent}`}</div>`
+    +(X.V?`<div class="vq">${tex(X.V.sol)}</div>`:(solAttrs(X.id).map(a=>`<img ${a} alt="해설">`).join('')||'<p>해설 그림이 없습니다.</p>'))+'</div>';
+  return `<div class="flow"><h2>${title} 정답</h2>${ansT(r(0,15))}${ansT(r(15,ids.length))}<div class="src">출처: ${xs.map((X,k)=>`${k+1}. ${X.it.label} ${X.it.n}번${X.lv?` 변형 ${X.lv}단계`:''}`).join(' · ')}</div></div>`
+    +`<div class="flow"><h2>${title} 해설</h2><div class="sols">${xs.map(sol).join('')}</div></div>`;
+}
+// 원래 시험지의 문항 배치: 회차 → [번호, 쪽, 단(L/R), 쪽 높이에 대한 문항 번호 위치]. 원본 PDF에서 뽑음.
+const PLAYOUT={"2024_03월학력평가":[[1,1,"L",0.224],[2,1,"L",0.526],[3,1,"R",0.182],[4,1,"R",0.525],[5,2,"L",0.147],[6,2,"L",0.5],[7,2,"R",0.147],[8,3,"L",0.143],[9,3,"L",0.537],[10,3,"R",0.143],[11,4,"L",0.143],[12,4,"R",0.143],[13,5,"L",0.143],[14,5,"R",0.143],[15,6,"L",0.143],[16,6,"R",0.183],[17,6,"R",0.52],[18,7,"L",0.147],[19,7,"L",0.514],[20,7,"R",0.147],[21,8,"L",0.143],[22,8,"R",0.143],[23,9,"L",0.222],[24,9,"R",0.182],[25,10,"L",0.143],[26,10,"R",0.143],[27,11,"L",0.143],[28,11,"R",0.143],[29,12,"L",0.183],[30,12,"R",0.143]],"2024_04월학력평가":[[1,1,"L",0.229],[2,1,"L",0.567],[3,1,"R",0.187],[4,1,"R",0.546],[5,2,"L",0.148],[6,2,"L",0.533],[7,2,"R",0.148],[8,3,"L",0.143],[9,3,"L",0.522],[10,3,"R",0.143],[11,4,"L",0.143],[12,4,"R",0.143],[13,5,"L",0.143],[14,5,"R",0.143],[15,6,"L",0.143],[16,6,"R",0.184],[17,6,"R",0.562],[18,7,"L",0.143],[19,7,"L",0.505],[20,7,"R",0.143],[21,8,"L",0.143],[22,8,"R",0.143],[23,9,"L",0.227],[24,9,"R",0.189],[25,10,"L",0.143],[26,10,"R",0.143],[27,11,"L",0.143],[28,11,"R",0.143],[29,12,"L",0.184],[30,12,"R",0.143]],"2024_06월모의평가":[[1,1,"L",0.244],[2,1,"L",0.564],[3,1,"R",0.201],[4,1,"R",0.463],[5,2,"L",0.135],[6,2,"L",0.495],[7,2,"R",0.135],[8,3,"L",0.135],[9,3,"L",0.503],[10,3,"R",0.135],[11,4,"L",0.135],[12,4,"R",0.135],[13,5,"L",0.14],[14,5,"R",0.14],[15,6,"L",0.135],[16,6,"R",0.173],[17,6,"R",0.528],[18,7,"L",0.141],[19,7,"L",0.444],[20,7,"R",0.142],[21,8,"L",0.135],[22,8,"R",0.135],[23,9,"L",0.232],[24,9,"R",0.194],[25,10,"L",0.137],[26,10,"R",0.135],[27,11,"L",0.135],[28,11,"R",0.135],[29,12,"L",0.173],[30,12,"R",0.135]],"2024_07월학력평가":[[1,1,"L",0.247],[2,1,"L",0.524],[3,1,"R",0.199],[4,1,"R",0.524],[5,2,"L",0.143],[6,2,"L",0.5],[7,2,"R",0.143],[8,3,"L",0.143],[9,3,"L",0.5],[10,3,"R",0.143],[11,4,"L",0.143],[12,4,"R",0.143],[13,5,"L",0.143],[14,5,"R",0.143],[15,6,"L",0.143],[16,6,"R",0.187],[17,6,"R",0.524],[18,7,"L",0.143],[19,7,"L",0.5],[20,7,"R",0.143],[21,8,"L",0.143],[22,8,"R",0.143],[23,9,"L",0.238],[24,9,"R",0.194],[25,10,"L",0.143],[26,10,"R",0.143],[27,11,"L",0.143],[28,11,"R",0.143],[29,12,"L",0.187],[30,12,"R",0.143]],"2024_09월모의평가":[[1,1,"L",0.24],[2,1,"L",0.567],[3,1,"R",0.194],[4,1,"R",0.458],[5,2,"L",0.135],[6,2,"L",0.49],[7,2,"R",0.135],[8,3,"L",0.135],[9,3,"L",0.488],[10,3,"R",0.14],[11,4,"L",0.135],[12,4,"R",0.135],[13,5,"L",0.135],[14,5,"R",0.135],[15,6,"L",0.135],[16,6,"R",0.173],[17,6,"R",0.56],[18,7,"L",0.135],[19,7,"L",0.543],[20,7,"R",0.135],[21,8,"L",0.135],[22,8,"R",0.135],[23,9,"L",0.232],[24,9,"R",0.194],[25,10,"L",0.135],[26,10,"R",0.135],[27,11,"L",0.135],[28,11,"R",0.135],[29,12,"L",0.173],[30,12,"R",0.135]],"2024_10월학력평가":[[1,1,"L",0.226],[2,1,"L",0.539],[3,1,"R",0.186],[4,1,"R",0.539],[5,2,"L",0.143],[6,2,"L",0.537],[7,2,"R",0.143],[8,3,"L",0.143],[9,3,"L",0.541],[10,3,"R",0.143],[11,4,"L",0.143],[12,4,"R",0.143],[13,5,"L",0.143],[14,5,"R",0.143],[15,6,"L",0.143],[16,6,"R",0.183],[17,6,"R",0.551],[18,7,"L",0.143],[19,7,"L",0.551],[20,7,"R",0.143],[21,8,"L",0.143],[22,8,"R",0.143],[23,9,"L",0.216],[24,9,"R",0.182],[25,10,"L",0.143],[26,10,"R",0.143],[27,11,"L",0.143],[28,11,"R",0.143],[29,12,"L",0.178],[30,12,"R",0.143]],"2024_수능":[[1,1,"L",0.241],[2,1,"L",0.561],[3,1,"R",0.194],[4,1,"R",0.542],[5,2,"L",0.135],[6,2,"L",0.515],[7,2,"R",0.135],[8,3,"L",0.14],[9,3,"L",0.501],[10,3,"R",0.14],[11,4,"L",0.135],[12,4,"R",0.135],[13,5,"L",0.135],[14,5,"R",0.136],[15,6,"L",0.135],[16,6,"R",0.173],[17,6,"R",0.557],[18,7,"L",0.142],[19,7,"L",0.515],[20,7,"R",0.141],[21,8,"L",0.135],[22,8,"R",0.135],[23,9,"L",0.234],[24,9,"R",0.194],[25,10,"L",0.135],[26,10,"R",0.135],[27,11,"L",0.135],[28,11,"R",0.135],[29,12,"L",0.173],[30,12,"R",0.135]],"2025_03월학력평가":[[1,1,"L",0.224],[2,1,"L",0.528],[3,1,"R",0.182],[4,1,"R",0.528],[5,2,"L",0.143],[6,2,"L",0.502],[7,2,"R",0.143],[8,3,"L",0.143],[9,3,"L",0.495],[10,3,"R",0.143],[11,4,"L",0.143],[12,4,"R",0.143],[13,5,"L",0.143],[14,5,"R",0.143],[15,6,"L",0.143],[16,6,"R",0.178],[17,6,"R",0.557],[18,7,"L",0.143],[19,7,"L",0.537],[20,7,"R",0.143],[21,8,"L",0.143],[22,8,"R",0.143],[23,9,"L",0.216],[24,9,"R",0.182],[25,10,"L",0.143],[26,10,"R",0.143],[27,11,"L",0.143],[28,11,"R",0.143],[29,12,"L",0.178],[30,12,"R",0.143]],"2025_05월학력평가":[[1,1,"L",0.23],[2,1,"L",0.556],[3,1,"R",0.187],[4,1,"R",0.468],[5,2,"L",0.143],[6,2,"L",0.499],[7,2,"R",0.143],[8,3,"L",0.148],[9,3,"L",0.493],[10,3,"R",0.148],[11,4,"L",0.143],[12,4,"R",0.143],[13,5,"L",0.143],[14,5,"R",0.143],[15,6,"L",0.148],[16,6,"R",0.184],[17,6,"R",0.553],[18,7,"L",0.148],[19,7,"L",0.544],[20,7,"R",0.148],[21,8,"L",0.143],[22,8,"R",0.143],[23,9,"L",0.227],[24,9,"R",0.194],[25,10,"L",0.143],[26,10,"R",0.143],[27,11,"L",0.143],[28,11,"R",0.143],[29,12,"L",0.184],[30,12,"R",0.143]],"2025_06월모의평가":[[1,1,"L",0.242],[2,1,"L",0.572],[3,1,"R",0.202],[4,1,"R",0.516],[5,2,"L",0.14],[6,2,"L",0.511],[7,2,"R",0.141],[8,3,"L",0.135],[9,3,"L",0.508],[10,3,"R",0.135],[11,4,"L",0.135],[12,4,"R",0.135],[13,5,"L",0.135],[14,5,"R",0.136],[15,6,"L",0.135],[16,6,"R",0.173],[17,6,"R",0.534],[18,7,"L",0.141],[19,7,"L",0.519],[20,7,"R",0.141],[21,8,"L",0.135],[22,8,"R",0.135],[23,9,"L",0.232],[24,9,"R",0.194],[25,10,"L",0.135],[26,10,"R",0.135],[27,11,"L",0.135],[28,11,"R",0.135],[29,12,"L",0.173],[30,12,"R",0.135]],"2025_07월학력평가":[[1,1,"L",0.247],[2,1,"L",0.521],[3,1,"R",0.194],[4,1,"R",0.522],[5,2,"L",0.143],[6,2,"L",0.519],[7,2,"R",0.143],[8,3,"L",0.143],[9,3,"L",0.505],[10,3,"R",0.143],[11,4,"L",0.143],[12,4,"R",0.143],[13,5,"L",0.143],[14,5,"R",0.143],[15,6,"L",0.143],[16,6,"R",0.183],[17,6,"R",0.508],[18,7,"L",0.143],[19,7,"L",0.519],[20,7,"R",0.143],[21,8,"L",0.143],[22,8,"R",0.143],[23,9,"L",0.241],[24,9,"R",0.194],[25,10,"L",0.143],[26,10,"R",0.143],[27,11,"L",0.143],[28,11,"R",0.143],[29,12,"L",0.182],[30,12,"R",0.143]],"2025_09월모의평가":[[1,1,"L",0.241],[2,1,"L",0.548],[3,1,"R",0.201],[4,1,"R",0.547],[5,2,"L",0.135],[6,2,"L",0.512],[7,2,"R",0.135],[8,3,"L",0.135],[9,3,"L",0.53],[10,3,"R",0.135],[11,4,"L",0.135],[12,4,"R",0.135],[13,5,"L",0.139],[14,5,"R",0.14],[15,6,"L",0.135],[16,6,"R",0.173],[17,6,"R",0.558],[18,7,"L",0.135],[19,7,"L",0.538],[20,7,"R",0.135],[21,8,"L",0.135],[22,8,"R",0.135],[23,9,"L",0.232],[24,9,"R",0.194],[25,10,"L",0.135],[26,10,"R",0.135],[27,11,"L",0.135],[28,11,"R",0.135],[29,12,"L",0.173],[30,12,"R",0.135]],"2025_10월학력평가":[[1,1,"L",0.224],[2,1,"L",0.499],[3,1,"R",0.182],[4,1,"R",0.499],[5,2,"L",0.143],[6,2,"L",0.473],[7,2,"R",0.143],[8,3,"L",0.143],[9,3,"L",0.443],[10,3,"R",0.143],[11,4,"L",0.143],[12,4,"R",0.143],[13,5,"L",0.143],[14,5,"R",0.143],[15,6,"L",0.143],[16,6,"R",0.178],[17,6,"R",0.533],[18,7,"L",0.143],[19,7,"L",0.508],[20,7,"R",0.143],[21,8,"L",0.143],[22,8,"R",0.143],[23,9,"L",0.216],[24,9,"R",0.182],[25,10,"L",0.143],[26,10,"R",0.143],[27,11,"L",0.147],[28,11,"R",0.147],[29,12,"L",0.178],[30,12,"R",0.143]],"2025_수능":[[1,1,"L",0.241],[2,1,"L",0.523],[3,1,"R",0.201],[4,1,"R",0.523],[5,2,"L",0.14],[6,2,"L",0.483],[7,2,"R",0.14],[8,3,"L",0.135],[9,3,"L",0.507],[10,3,"R",0.135],[11,4,"L",0.135],[12,4,"R",0.135],[13,5,"L",0.14],[14,5,"R",0.14],[15,6,"L",0.135],[16,6,"R",0.173],[17,6,"R",0.558],[18,7,"L",0.14],[19,7,"L",0.506],[20,7,"R",0.14],[21,8,"L",0.135],[22,8,"R",0.135],[23,9,"L",0.232],[24,9,"R",0.194],[25,10,"L",0.135],[26,10,"R",0.135],[27,11,"L",0.135],[28,11,"R",0.135],[29,12,"L",0.173],[30,12,"R",0.135]],"2026_03월학력평가":[[1,1,"L",0.224],[2,1,"L",0.543],[3,1,"R",0.182],[4,1,"R",0.543],[5,2,"L",0.143],[6,2,"L",0.526],[7,2,"R",0.143],[8,3,"L",0.147],[9,3,"L",0.525],[10,3,"R",0.147],[11,4,"L",0.143],[12,4,"R",0.143],[13,5,"L",0.143],[14,5,"R",0.143],[15,6,"L",0.143],[16,6,"R",0.178],[17,6,"R",0.503],[18,7,"L",0.147],[19,7,"L",0.5],[20,7,"R",0.148],[21,8,"L",0.143],[22,8,"R",0.143],[23,9,"L",0.217],[24,9,"R",0.182],[25,10,"L",0.143],[26,10,"R",0.143],[27,11,"L",0.143],[28,11,"R",0.143],[29,12,"L",0.178],[30,12,"R",0.143]],"2026_05월학력평가":[[1,1,"L",0.237],[2,1,"L",0.572],[3,1,"R",0.192],[4,1,"R",0.512],[5,2,"L",0.143],[6,2,"L",0.523],[7,2,"R",0.143],[8,3,"L",0.143],[9,3,"L",0.523],[10,3,"R",0.143],[11,4,"L",0.143],[12,4,"R",0.143],[13,5,"L",0.143],[14,5,"R",0.143],[15,6,"L",0.143],[16,6,"R",0.189],[17,6,"R",0.524],[18,7,"L",0.143],[19,7,"L",0.544],[20,7,"R",0.143],[21,8,"L",0.143],[22,8,"R",0.143],[23,9,"L",0.227],[24,9,"R",0.186],[25,10,"L",0.148],[26,10,"R",0.148],[27,11,"L",0.143],[28,11,"R",0.143],[29,12,"L",0.183],[30,12,"R",0.143]],"2026_06월모의평가":[[1,1,"L",0.24],[2,1,"L",0.558],[3,1,"R",0.194],[4,1,"R",0.558],[5,2,"L",0.135],[6,2,"L",0.517],[7,2,"R",0.135],[8,3,"L",0.135],[9,3,"L",0.509],[10,3,"R",0.135],[11,4,"L",0.135],[12,4,"R",0.135],[13,5,"L",0.135],[14,5,"R",0.135],[15,6,"L",0.135],[16,6,"R",0.179],[17,6,"R",0.542],[18,7,"L",0.135],[19,7,"L",0.538],[20,7,"R",0.135],[21,8,"L",0.135],[22,8,"R",0.135],[23,9,"L",0.232],[24,9,"R",0.194],[25,10,"L",0.135],[26,10,"R",0.135],[27,11,"L",0.135],[28,11,"R",0.135],[29,12,"L",0.173],[30,12,"R",0.135]],"2026_07월학력평가":[[1,1,"L",0.247],[2,1,"L",0.522],[3,1,"R",0.201],[4,1,"R",0.522],[5,2,"L",0.143],[6,2,"L",0.511],[7,2,"R",0.143],[8,3,"L",0.148],[9,3,"L",0.518],[10,3,"R",0.149],[11,4,"L",0.143],[12,4,"R",0.143],[13,5,"L",0.148],[14,5,"R",0.148],[15,6,"L",0.143],[16,6,"R",0.183],[17,6,"R",0.524],[18,7,"L",0.143],[19,7,"L",0.523],[20,7,"R",0.143],[21,8,"L",0.143],[22,8,"R",0.143],[23,9,"L",0.241],[24,9,"R",0.195],[25,10,"L",0.143],[26,10,"R",0.143],[27,11,"L",0.143],[28,11,"R",0.143],[29,12,"L",0.186],[30,12,"R",0.143]],"2026_09월모의평가":[[1,1,"L",0.242],[2,1,"L",0.532],[3,1,"R",0.194],[4,1,"R",0.532],[5,2,"L",0.14],[6,2,"L",0.513],[7,2,"R",0.14],[8,3,"L",0.135],[9,3,"L",0.523],[10,3,"R",0.135],[11,4,"L",0.14],[12,4,"R",0.14],[13,5,"L",0.135],[14,5,"R",0.135],[15,6,"L",0.135],[16,6,"R",0.173],[17,6,"R",0.532],[18,7,"L",0.135],[19,7,"L",0.52],[20,7,"R",0.135],[21,8,"L",0.135],[22,8,"R",0.135],[23,9,"L",0.232],[24,9,"R",0.194],[25,10,"L",0.142],[26,10,"R",0.142],[27,11,"L",0.135],[28,11,"R",0.135],[29,12,"L",0.173],[30,12,"R",0.135]],"2026_10월학력평가":[[1,1,"L",0.224],[2,1,"L",0.523],[3,1,"R",0.182],[4,1,"R",0.521],[5,2,"L",0.147],[6,2,"L",0.521],[7,2,"R",0.147],[8,3,"L",0.143],[9,3,"L",0.495],[10,3,"R",0.143],[11,4,"L",0.143],[12,4,"R",0.143],[13,5,"L",0.143],[14,5,"R",0.143],[15,6,"L",0.143],[16,6,"R",0.183],[17,6,"R",0.502],[18,7,"L",0.147],[19,7,"L",0.519],[20,7,"R",0.147],[21,8,"L",0.143],[22,8,"R",0.143],[23,9,"L",0.222],[24,9,"R",0.182],[25,10,"L",0.143],[26,10,"R",0.143],[27,11,"L",0.143],[28,11,"R",0.143],[29,12,"L",0.178],[30,12,"R",0.143]]};
+const PLAYOUT_DEF='2026_10월학력평가';   // 섞은 회차·변형은 가장 최근 회차의 배치를 따른다(20회차 모두 쪽·단 구성은 같고 문항 높이만 다르다)
+function pickLayout(ids){
+  if(ids.length!==30)return null;
+  const es=new Set(ids.map(x=>xp(x).it.e)), orig=ids.every(x=>!String(x).includes('#'));
+  const e=[...es][0];
+  return (orig&&es.size===1&&PLAYOUT[e])||PLAYOUT[PLAYOUT_DEF]||null;
+}
+const PMM=96/25.4, PCOLH=(277-12-7-3)*PMM, PFIRSTH=(277-27-7-3)*PMM;
+// 원래 시험지 배치대로: 쪽·단은 그대로, 단 안에서 문항이 시작하는 높이도 원본 비율대로 둔다. 자리에 안 들어가면 줄인다.
+function layoutPages(qs,L){
+  const B=0.905, by={};
+  L.forEach(([n,p,c,y])=>{(by[p]=by[p]||{L:[],R:[]})[c].push([n,y])});
+  return Object.keys(by).sort((a,b)=>a-b).map((p,i)=>{
+    const P=by[p], all=[...P.L,...P.R], sec=Math.min(...all.map(r=>r[0]))>=23?1:0;
+    const H=(i===0?PFIRSTH:PCOLH)-(sec&&Math.min(...all.map(r=>r[0]))===23?8*PMM:0);
+    const cols=[P.L,P.R].map(a=>{
+      a.sort((u,v)=>u[1]-v[1]); if(!a.length)return [];
+      const y0=a[0][1];
+      return a.map(([n,y],j)=>{
+        const top=(y-y0)/(B-y0), bot=j+1<a.length?(a[j+1][1]-y0)/(B-y0):1, [el,h]=qs[n-1], room=(bot-top)*H-6;
+        el.style.zoom=h>room?(room/h).toFixed(3):'';
+        return `<div class="slot abs" style="top:${(top*100).toFixed(2)}%;height:${((bot-top)*100).toFixed(2)}%">${el.outerHTML}</div>`;
+      });
+    });
+    return {cols,sec,first:i===0};
+  });
+}
+// 배치 정보가 없을 때: 문항 높이를 재서 반 단(slot)에 들어가면 반, 아니면 한 단 전체, 그래도 넘치면 줄여서 넣는다.
+function packPages(qs){
+  const pages=[]; let cur=null;
+  const newPage=sec=>{cur={cols:[[],[]],c:0,used:0,sec,first:!pages.length};pages.push(cur)};
+  const place=(el,h,sec)=>{
+    if(!cur||cur.sec!==sec)newPage(sec);
+    const H=cur.first?PFIRSTH:PCOLH, full=h>H/2-4;
+    if(cur.used+(full?2:1)>2){cur.c++;cur.used=0;if(cur.c>1){newPage(sec)}}
+    const H2=cur.first?PFIRSTH:PCOLH;
+    if(h>H2)el.style.zoom=(H2/h).toFixed(3);
+    cur.cols[cur.c].push(`<div class="slot${full?' full':''}">${el.outerHTML}</div>`);cur.used+=full?2:1;
+  };
+  qs.forEach(([el,h,sec])=>place(el,h,sec));
+  return pages;
+}
+function paperPages(title,sub,qs,L){
+  const pages=L?layoutPages(qs,L):packPages(qs), N=pages.length;
+  return pages.map((p,k)=>{
+    const head=p.first?`<div class="ph1"><div class="top"><span style="min-width:12mm"></span><span class="tt">${sub}</span><span class="no">${k+1}</span></div><div class="mid"><span class="gy">제 2 교시</span><span class="t">수학 영역</span><span class="who">성명 <span></span><br>수험 번호 <span></span></span></div></div>`
+      :`<div class="ph">${k%2?`<span class="no">${k+1}</span><span class="t">수학 영역</span><span class="gr">고3</span>`:`<span class="gr">고3</span><span class="t">수학 영역</span><span class="no" style="text-align:right">${k+1}</span>`}</div>`;
+    const sec=p.sec&&(k===0||pages[k-1].sec!==p.sec)?`<div class="sec2">선택과목 (확률과 통계)</div>`:'';
+    return `<div class="pg">${head}${sec}<div class="pbody"><div class="col"><div class="cin">${p.cols[0].join('')}</div></div><div class="col"><div class="cin">${p.cols[1].join('')}</div></div></div><div class="pf"><span>${k+1} / ${N}</span></div></div>`;
+  }).join('');
+}
+// 그림(웹 버전은 서명된 주소)이 다 받아진 뒤 쪽을 짜고 인쇄 창을 연다. 인쇄 창에서 'PDF로 저장'을 고르면 PDF가 된다.
+function printPaper(title,ids,sub){
+  const P=document.getElementById('paper');
+  let M=document.getElementById('pmeasure'); if(!M){M=document.createElement('div');M.id='pmeasure';document.body.appendChild(M)}
+  M.innerHTML=ids.map((x,k)=>paperQ(x,k)).join('');
+  P.innerHTML=paperRest(title,ids);   // 해설 그림도 미리 받기 시작
+  const t0=Date.now(), oldTitle=document.title;
+  const ready=()=>[...M.querySelectorAll('img'),...P.querySelectorAll('img')].every(im=>im.complete&&im.naturalWidth>1);
+  const go=()=>{
+    const qs=[...M.children].map((el,k)=>[el,el.getBoundingClientRect().height,k>=22?1:0]);
+    P.innerHTML=paperPages(title,sub||title,qs,pickLayout(ids))+paperRest(title,ids); M.innerHTML='';
+    const imgs=[...P.querySelectorAll('img')];
+    Promise.all(imgs.map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r}))).then(()=>{
+      document.body.classList.add('paper-print');document.title=title;window.print();document.title=oldTitle;
+      setTimeout(()=>document.body.classList.remove('paper-print'),500)});
+  };
+  (function wait(){if(ready()||Date.now()-t0>30000)go();else setTimeout(wait,200)})();
+}
 function renderPrint(){
   const P=state.print, list=P.ids.map(xp);
   return `<div class="unithead"><h2>${P.title}</h2><p>수학 영역 · 30문항 · 100분</p></div>
@@ -564,6 +706,8 @@ function render(){
   if(g('startRev')) g('startRev').onclick=()=>{const d=dueIds();if(d.length)openQ(d[0],d)};
   if(g('mkmix')) g('mkmix').onclick=()=>{const lv=g('ovar')?g('ovar').value:'';const ids=makeMixed({only2022:g('o22').checked,fresh:g('ofresh').checked,weak:g('oweak').checked,lv});if(!ids){alert('조건에 맞게 만들지 못했습니다. 옵션을 바꿔 다시 시도해 주세요.');return}const no=1+Math.max(0,...DB.sets.concat(DB.results).map(x=>+((x.title.match(/나만의 모의고사 (\d+)회/)||[])[1]||0)));const title=`나만의 모의고사 ${no}회${lv?` (${LVNAME[lv]})`:''}`;DB.sets.push({title,ids,t:Date.now()});save();if(confirm(`${title}를 만들었습니다. 지금 풀까요?\n(취소를 누르면 목록에 저장만 합니다)`))startExam(title,ids);else render()};
   m.querySelectorAll('[data-exam]').forEach(b=>b.onclick=()=>{if(DB.live&&!confirm('풀던 시험이 있습니다. 새로 시작할까요?'))return;startExam(byId[b.dataset.exam+'_01'].label,examIds(b.dataset.exam))});
+  m.querySelectorAll('[data-prtexam]').forEach(b=>b.onclick=()=>{const e=b.dataset.prtexam,it=byId[e+'_01'];printPaper(it.label,examIds(e),`${it.label} 수학 영역 (공통 + 확률과 통계)`)});
+  m.querySelectorAll('[data-prtset]').forEach(b=>b.onclick=()=>{const s=DB.sets[+b.dataset.prtset];printPaper(s.title,s.ids,`${s.title} · ${fmtDate(s.t)} 만듦`)});
   m.querySelectorAll('[data-setdel]').forEach(b=>b.onclick=()=>{const s=DB.sets[+b.dataset.setdel];if(!confirm(`${s.title}를 목록에서 지울까요?\n이미 푼 점수와 결과는 지난 응시 기록에 그대로 남습니다.`))return;DB.sets.splice(+b.dataset.setdel,1);save();render()});
   m.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{const s=DB.sets[+b.dataset.set];if(DB.live&&!confirm('풀던 시험이 있습니다. 새로 시작할까요?'))return;startExam(s.title,s.ids)});
   m.querySelectorAll('[data-res]').forEach(a=>a.onclick=e=>{e.preventDefault();state.tab='result';state.res=+a.dataset.res;syncTabs();render()});
@@ -572,7 +716,7 @@ function render(){
   if(g('quit')) g('quit').onclick=()=>{if(confirm('풀던 시험을 그만둘까요? 답은 저장되지 않습니다.')){delete DB.live;save();render()}};
   if(g('backExam')) g('backExam').onclick=()=>{state.tab='exam';syncTabs();render()};
   if(g('retake')) g('retake').onclick=()=>{const r=DB.results[state.res];startExam(r.title,r.ids)};
-  if(g('printExam')) g('printExam').onclick=()=>{const r=DB.results[state.res];state.print={title:r.title,ids:r.ids};state.tab='print';render()};
+  if(g('printExam')) g('printExam').onclick=()=>{const r=DB.results[state.res];printPaper(r.title,r.ids,r.title)};
   m.querySelectorAll('select[data-f]').forEach(s=>s.onchange=()=>{state[s.dataset.f]=s.value;render()});
   m.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{state.view=b.dataset.v;render()});
   m.querySelectorAll('.card').forEach(c=>c.onclick=()=>openQ(c.dataset.id, state.tab==='units'?filtered().map(i=>i.id):state.tab==='review'?dueIds():state.tab==='tags'?window.__tlist:null));
