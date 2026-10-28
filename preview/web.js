@@ -143,6 +143,7 @@ const CSS = `
 .gw-card button:disabled{opacity:.6}.gw-err{color:var(--bad,#d64545);font-size:14px;margin-top:10px;min-height:20px}
 .gw-who{display:flex;gap:8px;align-items:center;font-size:13px;white-space:nowrap}.gw-who a,.gw-who button{font:inherit;font-size:13px;border:1px solid var(--line,#e2e5ea);background:var(--panel,#fff);border-radius:7px;padding:5px 9px;cursor:pointer;color:inherit;text-decoration:none}
 #syncSt{color:var(--warn,#b7791f)}
+.gw-guide{display:block;text-align:center;margin-top:6px;font-size:14px;color:var(--accent,#2f6fde)}
 header>span.small{display:none}#reset{display:none!important}
 @media(max-width:820px){header{flex-wrap:wrap;gap:6px 10px;padding:8px 12px}header h1{font-size:16px}
  nav.tabs{order:3;width:100%;overflow-x:auto;flex-wrap:nowrap}nav.tabs button{white-space:nowrap;padding:6px 10px;font-size:14px}
@@ -169,7 +170,7 @@ function loginScreen() {
       : `<form class="gw-card"><h1>수능 수학 기출 학습</h1><p>선생님께 받은 아이디와 비밀번호로 들어오세요.</p>
       <label>아이디</label><input name="uid" required autocapitalize="off" autocomplete="username">
       <label>비밀번호</label><input name="pw" type="password" required autocomplete="current-password">
-      <button>로그인</button><div class="gw-err"></div></form>`;
+      <button>로그인</button><div class="gw-err"></div><a class="gw-guide" href="guide.html">처음이세요? 사용 설명서 보기</a></form>`;
     document.body.appendChild(box);
     const f = box.querySelector('form'), err = box.querySelector('.gw-err'), btn = f.querySelector('button');
     f.onsubmit = async e => {
@@ -205,6 +206,7 @@ function whoBar(page) {
   const el = document.createElement('div'); el.className = 'gw-who';
   el.innerHTML = `<span id="syncSt"></span><span>${esc(cls)}${esc(ME.name)}${role}</span>`
     + (ME.role !== 'student' ? (page === 'teacher' ? '<a href="index.html">문제 풀기</a>' : '<a href="teacher.html">선생님 화면</a>') : '')
+    + (page === 'teacher' ? '' : '<a href="guide.html">사용 설명서</a>')
     + '<button data-a="pw">비밀번호 바꾸기</button><button data-a="out">로그아웃</button>';
   el.querySelector('[data-a=pw]').onclick = changePw;
   el.querySelector('[data-a=out]').onclick = signOut;

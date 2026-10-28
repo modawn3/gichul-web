@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사용 설명서 · 수능 수학 기출 학습</title>
+<style>
+:root{--bg:#f6f7f9;--panel:#fff;--line:#e2e5ea;--text:#1d2330;--muted:#6b7385;--accent:#2f6fde;--accent-soft:#e8f0fd;--ok:#1f9d55;--ok-soft:#e6f6ec;--bad:#d64545;--bad-soft:#fdeceb;--warn:#b7791f;--warn-soft:#fdf5e6}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Pretendard","Malgun Gothic","Apple SD Gothic Neo",sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.65}
+header{display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header h1{font-size:18px;margin:0}
+header a{margin-left:auto;font-size:14px;border:1px solid var(--line);border-radius:8px;padding:6px 12px;color:var(--accent);text-decoration:none;background:var(--panel);white-space:nowrap}
+main{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+.intro{background:var(--accent-soft);border-radius:12px;padding:16px 18px;margin-bottom:18px}
+.intro p{margin:0}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px}
+nav.toc a{font-size:14px;padding:5px 11px;border-radius:16px;background:var(--panel);border:1px solid var(--line);color:var(--text);text-decoration:none}
+section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:14px;scroll-margin-top:70px}
+section h2{font-size:18px;margin:0 0 8px;display:flex;align-items:center;gap:10px}
+.num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:14px;flex-shrink:0}
+section h3{font-size:15px;margin:14px 0 4px}
+ol,ul{margin:6px 0;padding-left:22px}
+li{margin:3px 0}
+.btnlike{display:inline-block;font-size:13px;line-height:1.4;padding:1px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);white-space:nowrap}
+.btnlike.p{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab{display:inline-block;font-size:13px;line-height:1.4;padding:1px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent);font-weight:600;white-space:nowrap}
+.tip{background:var(--warn-soft);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:14px}
+.ok{background:var(--ok-soft);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:14px}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:10px 0;font-size:14px}
+.flow span.s{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:5px 10px}
+.flow span.s.bad{background:var(--bad-soft);border-color:#f3c5c2}
+.flow i{font-style:normal;color:var(--muted)}
+.small{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <h1>사용 설명서</h1>
+  <a href="./">문제 풀러 가기</a>
+</header>
+<main>
+  <div class="intro">
+    <p><b>수능 수학 기출 학습</b>은 2024~2026년 수능·모의평가·학력평가 수학(공통 + 확률과 통계) 문제를 단원별로 풀어 보는 사이트입니다. 문제를 틀리면 <b>같은 유형의 변형 문제와 비슷한 기출 문제</b>를 바로 이어서 풀 수 있습니다.</p>
+  </div>
+
+  <nav class="toc">
+    <a href="#login">로그인</a><a href="#tabs">화면 구성</a><a href="#units">문항 선택</a><a href="#exam">모의고사 풀기</a><a href="#link">틀렸을 때</a><a href="#wrong">오답노트</a><a href="#stats">학습 현황</a><a href="#print">시험지 PDF</a><a href="#faq">자주 묻는 질문</a>
+  </nav>
+
+  <section id="login">
+    <h2><span class="num">1</span>로그인</h2>
+    <ol>
+      <li>선생님께 받은 <b>아이디</b>와 <b>비밀번호</b>를 넣고 <span class="btnlike p">로그인</span>을 누릅니다.</li>
+      <li>처음 들어오면 오른쪽 위 <span class="btnlike">비밀번호 바꾸기</span>로 나만 아는 비밀번호(6자 이상)로 바꿔 두세요.</li>
+      <li>다 쓰고 나면 <span class="btnlike">로그아웃</span>을 누릅니다. 학교·도서관 같은 공용 컴퓨터에서는 꼭 로그아웃하세요.</li>
+    </ol>
+    <div class="ok">풀이 기록은 내 계정에 저장됩니다. 집 컴퓨터, 학교 컴퓨터, 휴대폰 어디서 로그인해도 이어서 볼 수 있습니다.</div>
+    <div class="tip">비밀번호를 잊었으면 선생님께 말씀드리세요. 선생님이 새 비밀번호로 바꿔 주실 수 있습니다.</div>
+  </section>
+
+  <section id="tabs">
+    <h2><span class="num">2</span>화면 구성</h2>
+    <p>맨 위에 탭이 네 개 있습니다. 처음 들어오면 <span class="tab">모의고사 풀기</span>가 열려 있습니다.</p>
+    <ul>
+      <li><span class="tab">문항 선택</span> 단원·연도·시험·배점·난이도로 골라서 한 문제씩 풀기</li>
+      <li><span class="tab">모의고사 풀기</span> 30문항을 100분 동안 실제 시험처럼 풀기</li>
+      <li><span class="tab">오답노트</span> 틀린 문제 모아 보기 (옆의 빨간 숫자 = 아직 못 맞힌 문제 수)</li>
+      <li><span class="tab">학습 현황</span> 단원별·태그별 정답률 확인</li>
+    </ul>
+  </section>
+
+  <section id="units">
+    <h2><span class="num">3</span>문항 선택: 단원별로 골라 풀기</h2>
+    <ol>
+      <li>왼쪽(휴대폰은 위쪽) 목록에서 <b>단원</b>을 고릅니다. 대수, 미적분Ⅰ, 확률과 통계의 단원이 2022 개정 교육과정 순서대로 있습니다.</li>
+      <li>위의 칸에서 <b>연도, 시험(몇 월 시험), 배점, 난이도, 핵심 개념</b>을 골라 범위를 좁힐 수 있습니다.</li>
+      <li>문제 카드를 누르면 풀이 창이 열립니다. 객관식은 ①~⑤를 누르고, 주관식은 숫자를 넣은 뒤 <span class="btnlike p">채점하기</span>를 누릅니다.</li>
+      <li><span class="btnlike">이 단원 차례로 풀기</span>를 누르면 고른 문제를 순서대로 풀 수 있습니다. <span class="btnlike">← 이전</span> <span class="btnlike">다음 →</span>으로 넘깁니다.</li>
+    </ol>
+    <p>잘 모르겠으면 <span class="btnlike">모르겠어요 (정답·해설 보기)</span>를 누르세요. 이 문제는 틀린 것으로 기록되어 오답노트에 들어갑니다.</p>
+    <p class="small"><span class="btnlike">일괄 보기·인쇄</span>를 누르면 고른 문제를 한 화면에 모아 보고 종이로 인쇄할 수 있습니다.</p>
+  </section>
+
+  <section id="exam">
+    <h2><span class="num">4</span>모의고사 풀기: 실전처럼 한 회분</h2>
+    <h3>기존 회차로 풀기</h3>
+    <ol>
+      <li>회차 이름(예: 2026 9월 모의평가)을 누르면 바로 시작합니다. 오른쪽 위에 <b>남은 시간</b>(100분)이 보입니다.</li>
+      <li>답을 고르면 오른쪽 <b>답안지</b>에 표시됩니다. 답안지의 번호를 눌러 그 문제로 바로 갈 수 있습니다.</li>
+      <li>다 풀면 <span class="btnlike p">제출하고 채점하기</span>를 누릅니다. 점수, 예상 등급, 틀린 단원이 나오고, 문항을 누르면 해설을 볼 수 있습니다.</li>
+    </ol>
+    <div class="tip">풀다가 <b>✕</b>를 눌러 나가도 괜찮습니다. 다시 들어오면 <span class="btnlike p">이어서 풀기</span>가 보입니다. 다만 시간은 계속 흐릅니다.</div>
+    <h3>섞어서 새 회차 만들기</h3>
+    <p>여러 회차의 문제를 섞어 새 모의고사를 만듭니다. 번호마다 다른 회차의 같은 번호 문제를 가져오기 때문에 배점과 난이도 흐름은 실제 시험과 비슷합니다.</p>
+    <ul>
+      <li><b>안 푼 문제 먼저</b>: 아직 안 푼 문제를 먼저 넣습니다.</li>
+      <li><b>약한 단원·틀린 문제 더 넣기</b>: 내가 자주 틀린 단원 문제를 더 넣습니다.</li>
+      <li><b>문항</b>: 기출 원문항 그대로, 또는 <b>변형 1단계</b>(숫자 바꾸기), <b>2단계</b>(조건·발문 바꾸기), <b>3단계</b>(구조 바꾸기), <b>혼합 변형</b> 중에서 고릅니다.</li>
+    </ul>
+    <p>만든 회차는 <b>내가 만든 회차</b>에 저장되어 다시 풀 수 있고, 필요 없으면 <span class="btnlike">삭제</span>합니다. 지난 점수는 <b>지난 응시 기록</b>에 쌓입니다.</p>
+  </section>
+
+  <section id="link">
+    <h2><span class="num">5</span>틀렸을 때: 비슷한 문제로 바로 연습</h2>
+    <p>이 사이트의 핵심 기능입니다. 문제를 틀리면 채점 화면 아래에 연습할 문제가 자동으로 연결됩니다.</p>
+    <div class="flow"><span class="s bad">기출 문제 틀림</span><i>→</i><span class="s">변형 1단계</span><i>→</i><span class="s">변형 2단계</span><i>→</i><span class="s">변형 3단계</span></div>
+    <ul>
+      <li><b>변형 문제</b>: 틀린 문제를 숫자·조건·구조를 바꿔 다시 만든 문제입니다. 1단계부터 풀고, 맞히면 다음 단계로 올라갑니다. 틀리면 한 단계 쉬운 문제를 다시 권합니다.</li>
+      <li><b>태그가 비슷한 문제</b>: 핵심 개념·단원·풀이 전략·난이도가 비슷한 다른 기출 문제입니다. 옆의 %는 이 문제와 얼마나 비슷한지를 뜻합니다.</li>
+    </ul>
+    <div class="ok">해설을 읽고 바로 변형 문제를 풀어 보면, 정말 이해했는지 확인할 수 있습니다.</div>
+  </section>
+
+  <section id="wrong">
+    <h2><span class="num">6</span>오답노트</h2>
+    <ul>
+      <li>한 번이라도 틀린 문제가 자동으로 모입니다. 다시 풀어 맞히면 <b>다시 풀어 맞힘</b>으로 옮겨집니다.</li>
+      <li><span class="btnlike p">틀린 문제와 태그가 비슷한 문제 모아 풀기</span>를 누르면 틀린 문제마다 비슷한 기출 3문항씩을 모아 한꺼번에 풀 수 있습니다. 이미 맞힌 문제는 빠집니다.</li>
+    </ul>
+  </section>
+
+  <section id="stats">
+    <h2><span class="num">7</span>학습 현황</h2>
+    <p>푼 문제 수와 정답률을 단원별, 태그(핵심 개념·풀이 전략 등)별로 보여 줍니다. 정답률이 낮은 단원부터 <span class="tab">문항 선택</span>에서 다시 풀어 보세요.</p>
+  </section>
+
+  <section id="print">
+    <h2><span class="num">8</span>시험지 PDF로 인쇄하기</h2>
+    <ol>
+      <li><span class="tab">모의고사 풀기</span>에서 회차 옆의 <span class="btnlike">시험지 PDF</span>를 누릅니다. 내가 만든 회차에도 같은 버튼이 있습니다.</li>
+      <li>문제 그림을 받는 동안 잠깐 기다리면 인쇄 창이 뜹니다.</li>
+      <li>프린터로 바로 인쇄하거나, 대상(프린터)을 <b>PDF로 저장</b>으로 바꿔 파일로 저장합니다. 용지는 <b>A4</b>로 둡니다.</li>
+    </ol>
+    <p>실제 시험지처럼 A4 2단으로 나오고, 뒤쪽에 정답표와 해설이 붙어 있습니다. 종이로 풀고 나서 채점할 때 쓰세요.</p>
+    <div class="tip">휴대폰에서는 인쇄 창이 잘 안 열릴 수 있습니다. 시험지 PDF는 컴퓨터에서 만드는 것을 권합니다.</div>
+  </section>
+
+  <section id="faq">
+    <h2><span class="num">?</span>자주 묻는 질문</h2>
+    <h3>문제 그림이 안 보여요.</h3>
+    <p>인터넷 연결을 확인하고 새로고침(F5)해 보세요. 오래 켜 두었다면 로그아웃했다가 다시 로그인하면 됩니다.</p>
+    <h3>오른쪽 위에 '저장 대기 중(인터넷 확인)'이 보여요.</h3>
+    <p>인터넷이 잠깐 끊겨 풀이 기록을 아직 못 보낸 상태입니다. 기록은 이 기기에 남아 있다가 연결되면 자동으로 저장되니, 인터넷을 확인하고 창을 바로 닫지 말고 잠시 기다리세요.</p>
+    <h3>휴대폰으로도 되나요?</h3>
+    <p>됩니다. 탭은 옆으로 밀어서 보고, 단원 목록은 화면 위쪽에 있습니다. 문제가 작게 보이면 화면을 가로로 돌려 보세요.</p>
+  </section>
+
+  <p class="small" style="text-align:center">더 궁금한 점은 선생님께 물어보세요.</p>
+</main>
+</body>
+</html>
