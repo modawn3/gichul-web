@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>선생님용 사용 설명서 · 수능 수학 기출 학습</title>
+<style>
+:root{--bg:#f6f7f9;--panel:#fff;--line:#e2e5ea;--text:#1d2330;--muted:#6b7385;--accent:#2f6fde;--accent-soft:#e8f0fd;--ok:#1f9d55;--ok-soft:#e6f6ec;--bad:#d64545;--bad-soft:#fdeceb;--warn:#b7791f;--warn-soft:#fdf5e6}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Pretendard","Malgun Gothic","Apple SD Gothic Neo",sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.65}
+header{display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header h1{font-size:18px;margin:0}
+header a{margin-left:auto;font-size:14px;border:1px solid var(--line);border-radius:8px;padding:6px 12px;color:var(--accent);text-decoration:none;background:var(--panel);white-space:nowrap}
+main{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+.intro{background:var(--accent-soft);border-radius:12px;padding:16px 18px;margin-bottom:18px}
+.intro p{margin:0}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px}
+nav.toc a{font-size:14px;padding:5px 11px;border-radius:16px;background:var(--panel);border:1px solid var(--line);color:var(--text);text-decoration:none}
+section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:14px;scroll-margin-top:70px}
+section h2{font-size:18px;margin:0 0 8px;display:flex;align-items:center;gap:10px}
+.num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:14px;flex-shrink:0}
+section h3{font-size:15px;margin:14px 0 4px}
+ol,ul{margin:6px 0;padding-left:22px}
+li{margin:3px 0}
+.btnlike{display:inline-block;font-size:13px;line-height:1.4;padding:1px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);white-space:nowrap}
+.btnlike.p{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab{display:inline-block;font-size:13px;line-height:1.4;padding:1px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent);font-weight:600;white-space:nowrap}
+.tip{background:var(--warn-soft);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:14px}
+.ok{background:var(--ok-soft);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:14px}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:10px 0;font-size:14px}
+.flow span.s{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:5px 10px}
+.flow span.s.bad{background:var(--bad-soft);border-color:#f3c5c2}
+.flow i{font-style:normal;color:var(--muted)}
+.small{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <h1>선생님용 사용 설명서</h1>
+  <a href="teacher.html">선생님 화면으로</a>
+</header>
+<main>
+  <div class="intro">
+    <p>선생님 화면에서는 <b>학생 계정을 만들고</b>, <b>반 학생들의 풀이 기록</b>을 단원·개념·문항별로 볼 수 있습니다. 학생 화면 사용법은 <a href="guide.html">학생용 사용 설명서</a>를 보세요.</p>
+  </div>
+
+  <nav class="toc">
+    <a href="#start">들어가기</a><a href="#roles">선생님과 관리자</a><a href="#accounts">학생 계정 만들기</a><a href="#pw">비밀번호 초기화</a><a href="#class">반 현황</a><a href="#admin">관리자 기능</a><a href="#faq">자주 묻는 질문</a>
+  </nav>
+
+  <section id="start">
+    <h2><span class="num">1</span>들어가기</h2>
+    <ol>
+      <li>학생 사이트(<a href="./">이 주소</a>)에서 받은 선생님 아이디로 로그인합니다.</li>
+      <li>오른쪽 위 <span class="btnlike">선생님 화면</span>을 누르면 선생님 화면이 열립니다. 주소 뒤에 <b>teacher.html</b>을 붙여 바로 들어와도 됩니다.</li>
+      <li>선생님 화면에서 <span class="btnlike">문제 풀기</span>를 누르면 학생 화면으로 돌아갑니다. 선생님도 학생처럼 문제를 풀어 볼 수 있습니다.</li>
+    </ol>
+    <p>탭은 <span class="tab">반 현황</span> <span class="tab">학생 계정</span> 두 개이고, 관리자에게는 <span class="tab">문항 이미지 올리기</span>가 하나 더 보입니다.</p>
+  </section>
+
+  <section id="roles">
+    <h2><span class="num">2</span>선생님과 관리자</h2>
+    <ul>
+      <li><b>선생님</b>: 관리자가 지정한 <b>담당 반</b>의 학생만 보고, 담당 반 학생 계정만 만들거나 비밀번호를 초기화할 수 있습니다.</li>
+      <li><b>관리자</b>: 모든 반을 보고, 선생님 계정 만들기, 담당 반 지정, 계정 지우기, 문항 이미지 올리기를 할 수 있습니다.</li>
+    </ul>
+    <div class="tip">처음 들어왔는데 "담당 반이 지정되지 않았습니다"가 보이면 관리자에게 담당 반 지정을 요청하세요.</div>
+  </section>
+
+  <section id="accounts">
+    <h2><span class="num">3</span>학생 계정 만들기 (명단으로 한꺼번에)</h2>
+    <ol>
+      <li><span class="tab">학생 계정</span> 탭에서 <span class="btnlike">예시 양식 내려받기</span>로 양식을 받습니다.</li>
+      <li>엑셀에서 <b>아이디, 이름, 학년, 반, 번호</b>(필수)와 <b>비밀번호</b>(선택)를 채웁니다. 아이디는 영문 소문자와 숫자로, 학번(예: 30201)을 쓰면 편합니다.</li>
+      <li>엑셀 표를 복사해 입력 칸에 붙여 넣거나 CSV 파일을 고른 뒤 <span class="btnlike">확인하기</span>를 누릅니다.</li>
+      <li>읽은 명단이 맞으면 <span class="btnlike p">N명 계정 만들기</span>를 누릅니다.</li>
+      <li>끝나면 <span class="btnlike p">결과 내려받기(CSV)</span>로 아이디와 비밀번호 목록을 받아 학생들에게 나눠 줍니다.</li>
+    </ol>
+    <div class="tip">비밀번호 칸을 비우면 6자리 숫자를 만들어 줍니다. 만들어진 비밀번호는 <b>결과 화면에서만</b> 보이니, 화면을 닫기 전에 꼭 결과를 내려받으세요.</div>
+    <div class="ok">학생에게는 아이디·비밀번호와 함께 <a href="guide.html">학생용 사용 설명서</a> 주소를 알려 주면 됩니다. 처음 로그인한 뒤 비밀번호를 바꾸도록 안내해 주세요.</div>
+  </section>
+
+  <section id="pw">
+    <h2><span class="num">4</span>비밀번호 초기화</h2>
+    <p>학생이 비밀번호를 잊었을 때: <span class="tab">학생 계정</span> 탭의 <b>비밀번호 초기화</b> 칸에 학생 아이디를 넣고 <span class="btnlike">새 비밀번호 만들기</span>를 누릅니다. 바로 아래에 새 비밀번호가 나오니 학생에게 알려 주세요. 풀이 기록은 그대로 남습니다.</p>
+  </section>
+
+  <section id="class">
+    <h2><span class="num">5</span>반 현황 보기</h2>
+    <p>위의 칸에서 <b>반</b>과 <b>기간</b>(전체, 최근 7일, 최근 30일)을 고릅니다.</p>
+    <ul>
+      <li><b>학생별</b>: 푼 문항 수, 정답률, 최근 7일 풀이 수, 변형 문제 풀이 수, 마지막 활동. 학생 이름을 누르면 그 학생의 <b>단원별 정답률</b>과 <b>지금 틀린 상태인 문항</b>이 나옵니다.</li>
+      <li><b>단원별 정답률</b>, <b>약한 핵심 개념</b>(정답률 낮은 순): 수업에서 다시 다룰 단원·개념을 고를 때 씁니다.</li>
+      <li><b>많이 틀린 문항</b>: 처음 풀 때 틀린 학생 비율이 높은 순서이고, <b>많이 고른 오답</b>도 보여 줍니다. 문항을 누르면 문제 그림과 정답이 나옵니다.</li>
+    </ul>
+    <p><span class="btnlike">표 내려받기(CSV)</span>로 학생별 표를 엑셀로 받을 수 있고, 새 기록은 <span class="btnlike">새로 고침</span>으로 다시 불러옵니다.</p>
+    <p class="small">정답률은 문항마다 마지막으로 푼 결과로 셉니다. 틀렸다가 다시 풀어 맞히면 맞힌 것으로 바뀝니다.</p>
+  </section>
+
+  <section id="admin">
+    <h2><span class="num">6</span>관리자 기능</h2>
+    <ul>
+      <li><b>선생님 계정 만들기</b>: 명단에 <b>역할</b> 열을 "선생님"으로, <b>담당반</b> 열에 <b>3-1;3-2</b>처럼 적어 학생과 같은 방법으로 만듭니다.</li>
+      <li><b>담당 반 지정</b>: 선생님 아이디와 반(예: 3-1;3-2)을 넣고 <span class="btnlike">지정</span>.</li>
+      <li><b>계정 지우기</b>: 아이디(여러 개는 쉼표)를 넣고 <span class="btnlike">지우기</span>. 풀이 기록도 함께 지워지고 되돌릴 수 없습니다.</li>
+      <li><b>문항 이미지 올리기</b>: 새 회차를 추가했을 때 기출학습 폴더의 img_q.js, img_s_연도.js 파일을 골라 올립니다. 이미 올라간 그림은 건너뜁니다.</li>
+    </ul>
+  </section>
+
+  <section id="faq">
+    <h2><span class="num">?</span>자주 묻는 질문</h2>
+    <h3>학생이 로그인이 안 된다고 해요.</h3>
+    <p><span class="tab">학생 계정</span>의 등록된 계정 목록에서 아이디가 맞는지 확인하고, 맞으면 비밀번호를 초기화해 주세요.</p>
+    <h3>계정을 만들 때 "담당 반 학생만 만들 수 있습니다"가 나와요.</h3>
+    <p>명단의 학년·반이 내 담당 반이 아닌 경우입니다. 학년·반을 확인하거나 관리자에게 담당 반 추가를 요청하세요.</p>
+    <h3>학생 기록이 안 보여요.</h3>
+    <p>기간이 "최근 7일"로 되어 있지 않은지 확인하고 <span class="btnlike">새로 고침</span>을 눌러 보세요. 학생이 인터넷이 끊긴 채 풀었다면 다시 연결될 때 올라옵니다.</p>
+  </section>
+</main>
+</body>
+</html>
