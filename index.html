@@ -198,12 +198,12 @@ body.notags .chip[data-tag]{cursor:default}body.notags .chip[data-tag]:hover{bor
 <header>
   <h1>수능 수학 기출 학습</h1>
   <nav class="tabs">
+    <button data-tab="units">문항 선택</button>
     <button data-tab="exam" class="on">모의고사 풀기</button>
     <button data-tab="review" hidden>오늘의 복습 <span id="dueCount" class="badge due">0</span></button>
     <button data-tab="tags" hidden>태그로 찾기</button>
     <button data-tab="wrong">오답노트 <span id="wrongCount" class="badge bad">0</span></button>
     <button data-tab="stats">학습 현황</button>
-    <button data-tab="units">단원별 문제</button>
   </nav>
   <span style="flex:1"></span>
   <span class="small">2024~2026 수능·모평·학평 · 공통 + 확률과 통계 · 2022 개정 교육과정 분류 · 문항 태그</span>
@@ -698,7 +698,7 @@ function renderPrint(){
 }
 function render(){
   renderSide();
-  // 왼쪽 단원 목록은 단원별 문제 탭에서만
+  // 왼쪽 단원 목록은 문항 선택 탭에서만
   document.querySelector('.layout').classList.toggle('noside',state.tab!=='units');
   const m=document.getElementById('main');
   m.innerHTML=state.tab==='units'?renderUnits():state.tab==='tags'?renderTags():state.tab==='wrong'?renderWrong():state.tab==='review'?renderReview():state.tab==='exam'?renderExam():state.tab==='result'?renderResult():state.tab==='print'?renderPrint():renderStats();
