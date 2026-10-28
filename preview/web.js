@@ -206,7 +206,7 @@ function whoBar(page) {
   const el = document.createElement('div'); el.className = 'gw-who';
   el.innerHTML = `<span id="syncSt"></span><span>${esc(cls)}${esc(ME.name)}${role}</span>`
     + (ME.role !== 'student' ? (page === 'teacher' ? '<a href="index.html">문제 풀기</a>' : '<a href="teacher.html">선생님 화면</a>') : '')
-    + (page === 'teacher' ? '' : '<a href="guide.html">사용 설명서</a>')
+    + (page === 'teacher' ? '<a href="teacher_guide.html">사용 설명서</a>' : '<a href="guide.html">사용 설명서</a>')
     + '<button data-a="pw">비밀번호 바꾸기</button><button data-a="out">로그아웃</button>';
   el.querySelector('[data-a=pw]').onclick = changePw;
   el.querySelector('[data-a=out]').onclick = signOut;
