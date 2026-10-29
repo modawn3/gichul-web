@@ -176,6 +176,7 @@ body.notags .chip[data-tag]{cursor:default}body.notags .chip[data-tag]:hover{bor
 #paper .sec2{text-align:center;font-weight:700;font-size:12pt;border:1.2px solid #000;margin:2mm 0 0;padding:1px 0}
 #paper .q img,#pmeasure .q img{display:block;max-width:100%}
 #paper .qn,#pmeasure .qn{font-weight:700;font-style:italic;font-size:11pt}
+#paper .usrc,#pmeasure .usrc{font-family:sans-serif;font-size:8pt;color:#444;margin-bottom:2px}
 #paper .vq,#pmeasure .vq{font-family:inherit;font-size:10pt;line-height:1.75;padding:0;background:none}
 #paper .flow{break-before:page}
 #paper .flow h2{font-size:15pt;text-align:center;margin:0 0 2mm;border-bottom:1.5px solid #000;padding-bottom:2mm}
@@ -382,7 +383,8 @@ function renderUnits(){
   else if(state.view==='cards'){
     h+='<div class="grid">'+list.map(i=>`<div class="card" data-id="${i.id}"><div class="meta"><span><b>${i.label}</b> ${i.n}번 <span class="pt">${i.pts}점${u.code==='ALL'?' · '+unitBy[i.code].name:''}</span>${ddBadge(i.id)}</span>${stBadge(i.id)}</div><div class="thumb"><img loading="lazy" ${QIMG(i.id)} alt=""></div></div>`).join('')+'</div>';
   }else{
-    h+=`<div class="toolbar noprint"><button class="btn primary" onclick="window.print()">인쇄 / PDF로 저장</button><label class="small"><input type="checkbox" id="withKey" ${state.withKey?'checked':''}> 마지막에 정답표 넣기</label></div>
+    state.plist={title:u.code==='ALL'?'전체 문제':u.name,ids:list.map(i=>i.id)};
+    h+=`<div class="toolbar noprint"><button class="btn primary" id="prtGrid" title="시험지처럼 2단, 한 쪽에 4문항">인쇄 / PDF로 저장</button><label class="small"><input type="checkbox" id="withKey" ${state.withKey?'checked':''}> 마지막에 정답표 넣기</label></div>
     <div class="plist">`+list.map((i,k)=>`<div class="pitem"><div class="src">[${k+1}] ${i.label} ${i.n}번 · ${i.pts}점</div><img ${QIMG(i.id)} alt=""></div>`).join('')+'</div>';
     if(state.withKey) h+='<div class="anskey"><b>정답</b><br>'+list.map((i,k)=>`[${k+1}] ${ansText(i)}`).join(' &nbsp; ')+'</div>';
   }
@@ -671,6 +673,29 @@ function paperPages(title,sub,qs,L){
     return `<div class="pg">${head}${sec}<div class="pbody"><div class="col"><div class="cin">${p.cols[0].join('')}</div></div><div class="col"><div class="cin">${p.cols[1].join('')}</div></div></div><div class="pf"><span>${k+1} / ${N}</span></div></div>`;
   }).join('');
 }
+// 문항 선택 탭 인쇄: 시험지처럼 2단, 단마다 2문항(한 쪽 4문항). 반 단보다 긴 문항은 줄여서 넣는다.
+function printGrid(title,ids,withKey){
+  const P=document.getElementById('paper');
+  let M=document.getElementById('pmeasure'); if(!M){M=document.createElement('div');M.id='pmeasure';document.body.appendChild(M)}
+  M.innerHTML=ids.map((id,k)=>{const i=byId[id];return `<div class="q"><div class="usrc">[${k+1}] ${i.label} ${i.n}번 · ${i.pts}점</div><img ${QIMG(id)} alt=""></div>`}).join('');
+  const t0=Date.now(), oldTitle=document.title;
+  const ready=()=>[...M.querySelectorAll('img')].every(im=>im.complete&&im.naturalWidth>1);
+  const go=()=>{
+    const qs=[...M.children], H=PCOLH/2-8, pages=[];
+    qs.forEach((el,k)=>{const h=el.getBoundingClientRect().height; if(h>H)el.style.zoom=(H/h).toFixed(3);
+      if(k%4===0)pages.push([[],[]]); pages[pages.length-1][(k%4)>>1].push(`<div class="slot">${el.outerHTML}</div>`)});
+    const N=pages.length+(withKey?1:0);
+    let html=pages.map((c,k)=>`<div class="pg"><div class="ph">${k%2?`<span class="no">${k+1}</span><span class="t">${title}</span><span class="gr">고3</span>`:`<span class="gr">고3</span><span class="t">${title}</span><span class="no" style="text-align:right">${k+1}</span>`}</div><div class="pbody"><div class="col"><div class="cin">${c[0].join('')}</div></div><div class="col"><div class="cin">${c[1].join('')}</div></div></div><div class="pf"><span>${k+1} / ${N}</span></div></div>`).join('');
+    if(withKey){const r=(a,b)=>Array.from({length:Math.min(b,ids.length)-a},(_,i)=>a+i);let t='';for(let a=0;a<ids.length;a+=15){const g=r(a,a+15);t+=`<table class="ans"><tr><th>번호</th>${g.map(k=>`<th>${k+1}</th>`).join('')}</tr><tr><th>정답</th>${g.map(k=>`<td>${ansText(byId[ids[k]])}</td>`).join('')}</tr></table>`}
+      html+=`<div class="flow"><h2>${title} 정답</h2>${t}</div>`}
+    P.innerHTML=html; M.innerHTML='';
+    const imgs=[...P.querySelectorAll('img')];
+    Promise.all(imgs.map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r}))).then(()=>{
+      document.body.classList.add('paper-print');document.title=title;window.print();document.title=oldTitle;
+      setTimeout(()=>document.body.classList.remove('paper-print'),500)});
+  };
+  (function wait(){if(ready()||Date.now()-t0>30000)go();else setTimeout(wait,200)})();
+}
 // 그림(웹 버전은 서명된 주소)이 다 받아진 뒤 쪽을 짜고 인쇄 창을 연다. 인쇄 창에서 'PDF로 저장'을 고르면 PDF가 된다.
 function printPaper(title,ids,sub){
   const P=document.getElementById('paper');
@@ -730,6 +755,7 @@ function render(){
     if(ids.length)openQ(ids[0],ids);else alert('함께 풀 문제가 없습니다.')};
   m.querySelectorAll('a[data-u]').forEach(a=>a.onclick=e=>{e.preventDefault();state.unit=a.dataset.u;state.tab='units';syncTabs();render()});
   const wk=document.getElementById('withKey'); if(wk) wk.onchange=()=>{state.withKey=wk.checked;render()};
+  if(g('prtGrid')) g('prtGrid').onclick=()=>printGrid(state.plist.title,state.plist.ids,state.withKey);
   const ss=document.getElementById('startSet'); if(ss) ss.onclick=()=>{const l=filtered();const first=l.find(i=>status(i.id)!=='ok')||l[0];if(first)openQ(first.id,l.map(i=>i.id))};
   const ex=document.getElementById('exp'); if(ex) ex.onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(DB)],{type:'application/json'}));a.download='기출학습_기록.json';a.click()};
   const im=document.getElementById('imp'); if(im) im.onchange=()=>{const f=im.files[0];if(!f)return;f.text().then(t=>{try{const d=JSON.parse(t);if(d.att){DB=d;save();render();alert('기록을 불러왔습니다.')}}catch(e){alert('파일을 읽지 못했습니다.')}})};
