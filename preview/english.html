@@ -193,6 +193,12 @@ body.notags .chip[data-tag]{cursor:default}body.notags .chip[data-tag]:hover{bor
 .exlist .setact{position:absolute;bottom:8px;right:8px;display:flex;gap:4px}
 .exlist .setact button{padding:2px 8px;font-size:12px;border-color:var(--line)}
 .exlist .setprt{color:var(--accent)}.exlist .setprt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.vq .psg p{margin:6px 0;text-align:justify}.vq .stem{font-family:"Pretendard","Malgun Gothic",sans-serif;font-weight:600;margin:0 0 8px}.vq .stem.q2{margin-top:14px}
+.vq .blank{display:inline-block;min-width:9em;border-bottom:1.5px solid currentColor;margin:0 2px}.vq u{text-underline-offset:3px}
+.vq .box,.vq .given{border:1px solid #444;padding:8px 12px;margin:8px 0}.vq .box b{display:block;text-align:center}.vq .sum .blank{min-width:6em;text-align:center}.vq .given{margin-bottom:12px}.vq .lab{text-align:center;margin:10px 0 0!important}
+.vq .sum{border:1px solid #444;padding:8px 12px;margin-top:12px!important}
+.vq .tbl{margin:8px 0}.vq .tbl .tt{text-align:center;font-weight:700;margin-bottom:4px}.vq .tbl table{border-collapse:collapse;margin:0 auto;font-size:14px}.vq .tbl th,.vq .tbl td{border:1px solid #666;padding:3px 10px;text-align:center}.vq .tbl .tn{font-size:12px;text-align:right}
+.vq .ch.long{flex-direction:column}.vq .ch.long>span{min-width:0;margin:2px 0}
 </style>
 </head>
 <body>
@@ -221,6 +227,7 @@ body.notags .chip[data-tag]{cursor:default}body.notags .chip[data-tag]:hover{bor
 <script src="data_en.js"></script>
 <script src="scount_en.js"></script>
 <script src="tags_en.js"></script>
+<script src="variants_en.js"></script>
 <script src="katex.js"></script>
 <script src="web.js"></script>
 <script>
@@ -465,7 +472,7 @@ function xp(x){const [id,l]=String(x).split('#'),lv=+l||0,it=byId[id],V=lv&&VARS
   return {id,lv:V?lv:0,it,V,mc:V?V.mc:it.mc,ans:V?V.ans:it.ans,atext:V?tex(V.anst):ansText(it)}}
 function openKey(x,seq,preset){const p=xp(x);openQ(p.id,seq,preset,p.lv)}
 // 혼합 변형(D형): 쉬운 번호 1단계, 중간 2단계, 어려운 번호 3단계
-function mixLv(n){return [1,2,3,4,5,6,7,8,16,17,23,24,25].includes(n)?1:[9,10,11,12,18,19,26,27].includes(n)?2:3}
+function mixLv(n){return [18,19,20,22,25,26,27,28,43,45].includes(n)?1:[23,24,29,35,36,41,42,44].includes(n)?2:3}
 const LVNAME={1:'변형 1단계',2:'변형 2단계',3:'변형 3단계',mix:'혼합 변형'};
 function examIds(e){return ITEMS.filter(i=>i.e===e).sort((a,b)=>a.n-b.n).map(i=>i.id)}
 const MAXU={};
@@ -475,6 +482,8 @@ const MIDS=[...new Set(UNITS.map(u=>u.mid))];
 // question type and difficulty position match a real exam. Unit counts are capped at what real exams use,
 // every 중단원 must appear, and no source exam supplies more than 3 problems.
 function makeMixed(opt){
+  // 변형은 아직 한 회차(시범)만 있어 그 회차 28문항을 단계대로 낸다
+  if(opt.lv){const ids=ITEMS.filter(i=>VARS[i.id]).sort((a,b)=>a.n-b.n).map(i=>i.id);if(ids.length===28)return ids.map(id=>id+'#'+(opt.lv==='mix'?mixLv(byId[id].n):+opt.lv))}
   for(let tries=0;tries<500;tries++){
     const used={},src={},pick=[];let fail=false;
     for(let n=18;n<=45&&!fail;n++){
@@ -503,7 +512,7 @@ function renderExam(){
   h+=`<div class="section"><h3>기존 회차로 풀기</h3><div class="exlist">`+EXAMS.map(e=>`<div class="setitem"><button data-exam="${e}">${E1(e).label}<span class="sub">${bestOf(E1(e).label)}</span></button><span class="setact"><button class="setprt" data-prtexam="${e}" title="실제 시험지 양식으로 인쇄·PDF 저장">시험지 PDF</button></span></div>`).join('')+'</div></div>';
   h+=`<div class="section"><h3>섞어서 새 회차 만들기</h3><p class="small">여러 회차의 문항을 섞어 한 회분을 새로 만듭니다. 각 번호는 다른 회차의 같은 번호 문항에서 가져오므로 문항 유형과 차례가 실제 시험과 같습니다. 장문(41~42번, 43~45번)은 한 회차의 세트를 통째로 가져옵니다.</p>
    <div class="opts"><label ${SHOW22()?'':'hidden'}><input type="checkbox" id="o22" ${SHOW22()?'checked':''}> 2022 개정 범위만 (원순열 빼기)</label><label><input type="checkbox" id="ofresh" checked> 안 푼 문제 먼저</label><label><input type="checkbox" id="oweak"> 약한 단원·틀린 문제 더 넣기</label></div>
-   ${Object.keys(VARS).length?`<div class="opts"><label>문항: <select id="ovar"><option value="">기출 원문항 그대로</option><option value="1">변형 1단계 (숫자 바꾸기)</option><option value="2">변형 2단계 (조건·발문 바꾸기)</option><option value="3">변형 3단계 (구조 바꾸기)</option><option value="mix">혼합 변형 (쉬운 번호 1단계·중간 2단계·어려운 번호 3단계)</option></select></label></div>`:''}
+   ${Object.keys(VARS).length?`<div class="opts"><label>문항 (변형은 지금 2026년 10월 학평만): <select id="ovar"><option value="">기출 원문항 그대로</option><option value="1">변형 1단계 (쉽게·짧게)</option><option value="2">변형 2단계 (원문 수준)</option><option value="3">변형 3단계 (어렵게)</option><option value="mix">혼합 변형 (쉬운 유형 1단계·중간 2단계·어려운 유형 3단계)</option></select></label></div>`:''}
    <div class="toolbar"><button class="btn primary" id="mkmix">새 회차 만들기</button></div></div>`;
   if(DB.sets.length) h+=`<div class="section"><h3>내가 만든 회차</h3><div class="exlist">`+DB.sets.map((s,k)=>`<div class="setitem"><button data-set="${k}">${s.title}<span class="sub">${fmtDate(s.t)} 만듦 · ${bestOf(s.title)}</span></button><span class="setact"><button class="setprt" data-prtset="${k}" title="실제 시험지 양식으로 인쇄·PDF 저장">시험지 PDF</button><button class="setdel" data-setdel="${k}" title="이 회차를 목록에서 지우기">삭제</button></span></div>`).join('')+'</div></div>';
   if(DB.results.length) h+=`<div class="section"><h3>지난 응시 기록</h3><table class="stats"><tr><th>날짜</th><th>회차</th><th>점수</th><th>맞은 문항</th><th>걸린 시간</th><th></th></tr>`+DB.results.map((r,k)=>[r,k]).reverse().map(([r,k])=>`<tr><td>${fmtDate(r.t)}</td><td>${r.title}</td><td><b>${r.score}</b>점</td><td>${r.ok}/${r.ids.length}</td><td>${Math.round(r.secs/60)}분</td><td><a href="#" data-res="${k}">결과 보기</a></td></tr>`).join('')+'</table></div>';
@@ -609,7 +618,7 @@ function paperQ(x,k){
   if(!X.V) return `<div class="q">${lbl}<img ${QIMG(X.id)} alt="${k+1}번"></div>`;   // 원문항 그림에는 번호·배점이 들어 있다
   let q=tex(X.V.q); const pts=` <span style="white-space:nowrap">[${it.pts}점]</span>`, i=q.indexOf('<div class=\'ch');
   q=i>=0?q.slice(0,i)+pts+q.slice(i):q+pts;
-  return `<div class="q">${lbl}<span class="qn">${k+1}.</span> <span class="vq">${q}</span></div>`;
+  return `<div class="q">${lbl}<span class="qn">${k+18}.</span> <span class="vq">${q}</span></div>`;
 }
 function paperRest(title,ids){
   const xs=ids.map(xp), anyV=xs.some(X=>X.lv), r=(a,b)=>Array.from({length:b-a},(_,i)=>a+i);
