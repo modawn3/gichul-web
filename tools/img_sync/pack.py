@@ -3,7 +3,7 @@
 #   python3 pack.py <저장소 폴더> <있는그림.json> <img_*.js ...>
 # 키는 환경변수 IMG_PACK_KEY(base64 32바이트, Supabase Vault 'img_pack_key').
 # 있는그림.json은 회차(그룹)별 요약 {"q/2024_03h": "<md5>", ...} — 아래 SQL 결과를 그대로 저장한다.
-#   select json_object_agg(g, h) from (select regexp_replace(name, '_\d\d(_\d+)?\.png$', '') g,
+#   select json_object_agg(g, h) from (select substring(name from '^[qs]/(?:[a-z]+_)?\d{4}_[^_]+') g,
 #     md5(string_agg(name || ':' || trim(both '"' from metadata->>'eTag'), ',' order by name collate "C")) h
 #     from storage.objects where bucket_id = 'items' group by 1) t
 # 요약이 다른 회차(새 회차, 그림이 바뀐 회차)는 그 회차 그림을 전부 다시 올린다.
@@ -18,8 +18,11 @@ def img_key(i):  # web.js imgKey와 같아야 함
     i = i.replace('월학력평가', 'h').replace('월모의평가', 'm').replace('수능', 'csat')
     return ''.join(c if ord(c) < 128 else 'u%x' % ord(c) for c in i)
 
+def group(path):  # 회차 단위: q/2024_03h, s/en_2025_csat, q/ko_2026_06m
+    return re.match(r'[qs]/(?:[a-z]+_)?\d{4}_[^_]+', path)[0]
+
 def extract(text):
-    for m in re.finditer(r'"((?:[a-z]+_)?\d{4}_[^"]+?_\d\d)":("data:image/png;base64,[^"]+"|\[[^\]]*\])', text):
+    for m in re.finditer(r'"((?:[a-z]+_)?\d{4}_[^"]+)":("data:image/png;base64,[^"]+"|\[[^\]]*\])', text):
         if m[2][0] == '"':
             yield f'q/{img_key(m[1])}.png', m[2][23:-1]
         else:
@@ -33,7 +36,7 @@ def main():
     groups = {}
     for f in srcs:
         for path, b64 in extract(Path(f).read_text()):
-            groups.setdefault(re.sub(r'_\d\d(_\d+)?\.png$', '', path), {})[path] = b64
+            groups.setdefault(group(path), {})[path] = b64
     todo = {}
     for g, imgs in groups.items():
         h = hashlib.md5(','.join(f'{p}:{hashlib.md5(base64.b64decode(b)).hexdigest()}' for p, b in sorted(imgs.items())).encode()).hexdigest()
