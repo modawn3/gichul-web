@@ -1,8 +1,9 @@
 // 웹 버전 공통: 로그인, 서버 기록 불러오기·저장, 비공개 저장소의 문항 이미지 주소 받기.
 // index.html(학생 화면)은 window.__APP, teacher.html(선생님 화면)은 window.__TEACHER를 정의하고, 로그인이 끝나면 여기서 실행한다.
-// 과목: 수학(index.html) 또는 영어(english.html, data_en.js가 window.SUBJ='en'을 정함). 영어 문항 id는 'en_'으로 시작한다.
-const SUBJ = window.SUBJ || 'math', isEn = SUBJ === 'en';
-const mine = id => String(id).startsWith('en_') === isEn;
+// 과목: 수학(index.html), 영어(english.html, data_en.js가 window.SUBJ='en'), 국어(korean.html, data_ko.js가 'ko'). 영어·국어 문항 id는 'en_'·'ko_'로 시작한다.
+const SUBJ = window.SUBJ || 'math', SUBS = ['en', 'ko'], PFX = SUBJ === 'math' ? '' : SUBJ + '_';
+const SUBJNAME = { math: '수학', en: '영어', ko: '국어' };
+const mine = id => (SUBS.find(x => String(id).startsWith(x + '_')) || 'math') === SUBJ;
 const sb = supabase.createClient(window.SB_URL, window.SB_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
 window.sb = sb;
 let ME = null;
@@ -65,15 +66,15 @@ function isMc(id, lv) {   // 객관식 답은 숫자(1~5)로 되돌려야 화면
 }
 
 async function loadDB() {
-  PKEY = 'gichul_pending_' + (isEn ? 'en_' : '') + ME.id; SKEY = 'gichul_state_' + (isEn ? 'en_' : '') + ME.id;
+  PKEY = 'gichul_pending_' + PFX + ME.id; SKEY = 'gichul_state_' + PFX + ME.id;
   const [rows, st] = await Promise.all([
     fetchAll(() => sb.from('attempts').select('cid,item_id,variant,ok,answer,secs,mode,at').eq('user_id', ME.id).order('at').order('id')),
     sb.from('user_state').select('data,updated_at').eq('user_id', ME.id).maybeSingle(),
   ]);
   if (st.error) throw st.error;
-  // user_state 한 칸에 수학 기록은 맨 위에, 영어 기록은 en 아래에 둔다
+  // user_state 한 칸에 수학 기록은 맨 위에, 영어·국어 기록은 en·ko 아래에 둔다
   const raw = st.data ? st.data.data || {} : {};
-  let data = isEn ? (raw.en || {}) : (({ en, ...m }) => m)(raw);
+  let data = SUBJ !== 'math' ? (raw[SUBJ] || {}) : (({ en, ko, ...m }) => m)(raw);
   const local = lsGet(SKEY);   // 저장하기 전에 창을 닫았으면 이 기기의 것이 더 새것
   if (local && (!st.data || local.t > Date.parse(st.data.updated_at))) data = local.data;
   const DB = Object.assign({ rev: {}, results: [], sets: [] }, data, { att: {}, vatt: {} });
@@ -121,13 +122,13 @@ async function pushNow() {
   } catch (e) { console.warn(e); setSync(false) }
   pushing = false;
 }
-function stateOf(DB) { const { att, vatt, en, ...rest } = DB; return rest }
+function stateOf(DB) { const { att, vatt, en, ko, ...rest } = DB; return rest }
 async function pushState() {
   // 다른 과목 기록은 서버에 있는 그대로 두고 이 과목 부분만 바꾼다
   const { data: cur, error: e0 } = await sb.from('user_state').select('data').eq('user_id', ME.id).maybeSingle();
   if (e0) { console.warn(e0); setSync(false); return }
   const base = cur ? cur.data || {} : {}, mineSt = stateOf(lastDB);
-  const data = isEn ? { ...base, en: mineSt } : { ...mineSt, ...(base.en ? { en: base.en } : {}) };
+  const data = SUBJ !== 'math' ? { ...base, [SUBJ]: mineSt } : { ...mineSt, ...Object.fromEntries(SUBS.filter(x => base[x]).map(x => [x, base[x]])) };
   const { error } = await sb.from('user_state').upsert({ user_id: ME.id, data, updated_at: new Date().toISOString() });
   if (error) { console.warn(error); setSync(false) } else lsSet(SKEY, null);
 }
@@ -176,7 +177,7 @@ function loginScreen() {
       <label>이름</label><input name="nm" required>
       <label>비밀번호 (6자 이상)</label><input name="pw" type="password" minlength="6" required>
       <button>관리자 계정 만들기</button><div class="gw-err"></div></form>`
-      : `<form class="gw-card"><h1>수능 ${isEn ? '영어' : '수학'} 기출 학습</h1><p>선생님께 받은 아이디와 비밀번호로 들어오세요.</p>
+      : `<form class="gw-card"><h1>수능 ${SUBJNAME[SUBJ]} 기출 학습</h1><p>선생님께 받은 아이디와 비밀번호로 들어오세요.</p>
       <label>아이디</label><input name="uid" required autocapitalize="off" autocomplete="username">
       <label>비밀번호</label><input name="pw" type="password" required autocomplete="current-password">
       <button>로그인</button><div class="gw-err"></div><a class="gw-guide" href="guide.html">처음이세요? 사용 설명서 보기</a></form>`;
@@ -214,7 +215,7 @@ function whoBar(page) {
   const role = ME.role === 'student' ? '' : ME.role === 'admin' ? ' (관리자)' : ' (선생님)';
   const el = document.createElement('div'); el.className = 'gw-who';
   el.innerHTML = `<span id="syncSt"></span><span>${esc(cls)}${esc(ME.name)}${role}</span>`
-    + (page === 'teacher' ? '' : isEn ? '<a href="index.html">수학</a>' : '<a href="english.html">영어</a>')
+    + (page === 'teacher' ? '' : [['index.html', 'math'], ['korean.html', 'ko'], ['english.html', 'en']].filter(x => x[1] !== SUBJ).map(x => `<a href="${x[0]}">${SUBJNAME[x[1]]}</a>`).join(''))
     + (ME.role !== 'student' ? (page === 'teacher' ? '<a href="index.html">문제 풀기</a>' : '<a href="teacher.html">선생님 화면</a>') : '')
     + (page === 'teacher' ? '<a href="teacher_guide.html">사용 설명서</a>' : '<a href="guide.html">사용 설명서</a>')
     + '<button data-a="pw">비밀번호 바꾸기</button><button data-a="out">로그아웃</button>';
