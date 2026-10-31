@@ -1,7 +1,7 @@
 # 오프라인 프로그램의 img_*.js(문제 그림 img_q*, 해설 그림 img_s*)에서 그림을 꺼내,
 # Supabase 저장소(items)에 아직 없거나 바뀐 것만 암호화 묶음으로 만든다.
 #   python3 pack.py <저장소 폴더> <있는그림.json> <img_*.js ...>
-# 키는 환경변수 IMG_PACK_KEY(base64 32바이트, Supabase Vault 'img_pack_key').
+# 키는 환경변수 IMG_PACK_KEY(base64 32바이트, 함수 비밀값 IMG_PACK_KEY와 같은 값).
 # 있는그림.json은 회차(그룹)별 요약 {"q/2024_03h": "<md5>", ...} — 아래 SQL 결과를 그대로 저장한다.
 #   select json_object_agg(g, h) from (select substring(name from '^[qs]/(?:[a-z]+_)?\d{4}_[^_]+') g,
 #     md5(string_agg(name || ':' || trim(both '"' from metadata->>'eTag'), ',' order by name collate "C")) h
