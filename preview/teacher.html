@@ -60,8 +60,25 @@ textarea{width:100%;min-height:160px;font-family:ui-monospace,Consolas,monospace
 <script src="web.js"></script>
 <script>
 window.__TEACHER = async function (ME) {
-const UNITS = window.UNITS, ITEMS = window.ITEMS, TAGS = window.TAGS || {}, TD = window.TAGDEF || { c: {} };
-const byId = Object.fromEntries(ITEMS.map(i => [i.id, i])), unitBy = Object.fromEntries(UNITS.map(u => [u.code, u]));
+// 과목별 자료: 수학은 처음부터 있고, 영어·국어는 고를 때 data_xx.js·tags_xx.js를 불러와 따로 담아 둔다
+const SUBJ = { ma: { name: '수학', unit: '단원', conc: '핵심 개념' }, en: { name: '영어', unit: '유형', conc: '소재' }, ko: { name: '국어', unit: '영역', conc: '문항 유형' } };
+const MA_ITEMS = window.ITEMS, SD = { ma: { UNITS: window.UNITS, ITEMS: window.ITEMS, TAGS: window.TAGS || {}, TD: window.TAGDEF || { c: {} } } };
+let subj = 'ma', UNITS, ITEMS, TAGS, TD, byId, unitBy;
+function useSubj(s) {
+  subj = s; ({ UNITS, ITEMS, TAGS, TD } = SD[s]);
+  byId = Object.fromEntries(ITEMS.map(i => [i.id, i])); unitBy = Object.fromEntries(UNITS.map(u => [u.code, u]));
+}
+useSubj('ma');
+const loadJs = src => new Promise((ok, no) => { const e = document.createElement('script'); e.src = src; e.onload = ok; e.onerror = () => no(new Error(src + ' 불러오기 실패')); document.head.appendChild(e) });
+async function loadSubj(s) {
+  if (!SD[s]) {
+    const keep = ['UNITS', 'ITEMS', 'TAGS', 'TAGDEF', 'SUBJ', 'PSG'].map(k => [k, window[k]]);
+    try { await loadJs(`data_${s}.js`); await loadJs(`tags_${s}.js`); SD[s] = { UNITS: window.UNITS, ITEMS: window.ITEMS, TAGS: window.TAGS || {}, TD: window.TAGDEF || { c: {} } } }
+    finally { keep.forEach(([k, v]) => window[k] = v) }
+  }
+  useSubj(s);
+}
+const L = () => SUBJ[subj];
 const CIRC = ['', '①', '②', '③', '④', '⑤'];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const pct = (a, b) => b ? Math.round(a / b * 100) : null;
@@ -110,7 +127,7 @@ function lastBy(att) {
 async function renderClass() {
   if (!CLASSES.length) { main.innerHTML = `<div class="note">${isAdmin ? '아직 학생 계정이 없습니다. "학생 계정" 탭에서 명단으로 만들어 주세요.' : '담당 반이 지정되지 않았습니다. 관리자에게 담당 반 지정을 요청하세요.'}</div>`; return }
   main.innerHTML = '<p class="small">불러오는 중…</p>';
-  const st = await students(cls), all = await attempts(cls), att = all.filter(inPeriod);
+  const st = await students(cls), all = await attempts(cls), att = all.filter(a => inPeriod(a) && byId[a.item_id]);
   const orig = att.filter(a => !a.variant), last = lastBy(att), week = Date.now() - 7 * 86400000;
   const per = Object.fromEntries(st.map(s => [s.id, { s, n: 0, ok: 0, items: 0, week: 0, v: 0, lastT: 0 }]));
   for (const a of att) { const p = per[a.user_id]; if (!p) continue; if (a.variant) p.v++; else p.n++; if (a.t > week) p.week++; if (a.t > p.lastT) p.lastT = a.t }
@@ -131,7 +148,7 @@ async function renderClass() {
   const hard = Object.entries(byItem).filter(([, x]) => x.n >= minN && x.bad).sort((a, b) => b[1].bad / b[1].n - a[1].bad / a[1].n || b[1].n - a[1].n).slice(0, 20);
   const weakC = Object.entries(byConc).filter(([, x]) => x.n >= minN).sort((a, b) => a[1].ok / a[1].n - b[1].ok / b[1].n).slice(0, 15);
 
-  let h = `<div class="toolbar"><select id="selCls">${CLASSES.map(c => { const [g, k] = c.split('-'); return `<option value="${c}" ${c === cls ? 'selected' : ''}>${g}학년 ${k}반</option>` }).join('')}</select>
+  let h = `<div class="toolbar"><select id="selSubj">${Object.entries(SUBJ).map(([k, v]) => `<option value="${k}" ${k === subj ? 'selected' : ''}>${v.name}</option>`).join('')}</select><select id="selCls">${CLASSES.map(c => { const [g, k] = c.split('-'); return `<option value="${c}" ${c === cls ? 'selected' : ''}>${g}학년 ${k}반</option>` }).join('')}</select>
     <select id="selPer">${[['all', '전체 기간'], ['7', '최근 7일'], ['30', '최근 30일']].map(([v, t]) => `<option value="${v}" ${v === period ? 'selected' : ''}>${t}</option>`).join('')}</select>
     <button class="btn" id="reload">새로 고침</button><button class="btn" id="csv">표 내려받기(CSV)</button></div>
   <div class="tiles">
@@ -142,20 +159,21 @@ async function renderClass() {
   </div>
   <h3>학생별</h3><div class="panel"><table><thead><tr><th class="n">번호</th><th>이름</th><th>아이디</th><th class="n">푼 문항</th><th class="n">정답률</th><th class="n">최근 7일 풀이</th><th class="n">변형 풀이</th><th>마지막 활동</th></tr></thead><tbody>`
     + st.map(s => { const p = per[s.id]; return `<tr class="click" data-stu="${s.id}"><td class="n">${s.number ?? ''}</td><td>${esc(s.name)}</td><td class="mu">${esc(s.login_id)}</td><td class="n">${p.items}</td>${pctCell(pct(p.ok, p.items))}<td class="n">${p.week}</td><td class="n">${p.v}</td><td class="mu">${fmt(p.lastT)}</td></tr>` }).join('')
-    + `</tbody></table></div><p class="small">학생을 누르면 단원별 정답률과 틀린 문항을 볼 수 있습니다.</p>
-  <div class="two"><div><h3>단원별 정답률</h3><div class="panel"><table><thead><tr><th>단원</th><th class="n">풀이(학생×문항)</th><th class="n">정답률</th></tr></thead><tbody>`
+    + `</tbody></table></div><p class="small">${L().name} 기록만 셉니다. 학생을 누르면 ${L().unit}별 정답률과 틀린 문항을 볼 수 있습니다.</p>
+  <div class="two"><div><h3>${L().unit}별 정답률</h3><div class="panel"><table><thead><tr><th>${L().unit}</th><th class="n">풀이(학생×문항)</th><th class="n">정답률</th></tr></thead><tbody>`
     + UNITS.filter(u => byUnit[u.code]).map(u => `<tr><td>${esc(u.name)} <span class="mu">${esc(u.subject)}</span></td><td class="n">${byUnit[u.code].n}</td>${pctCell(pct(byUnit[u.code].ok, byUnit[u.code].n))}</tr>`).join('')
-    + `</tbody></table></div></div><div><h3>약한 핵심 개념 (정답률 낮은 순)</h3><div class="panel"><table><thead><tr><th>핵심 개념</th><th class="n">풀이</th><th class="n">정답률</th></tr></thead><tbody>`
+    + `</tbody></table></div></div><div><h3>약한 ${L().conc} (정답률 낮은 순)</h3><div class="panel"><table><thead><tr><th>${L().conc}</th><th class="n">풀이</th><th class="n">정답률</th></tr></thead><tbody>`
     + (weakC.map(([c, x]) => `<tr><td>${esc(TD.c[c] || c)}</td><td class="n">${x.n}</td>${pctCell(pct(x.ok, x.n))}</tr>`).join('') || '<tr><td colspan="3" class="mu">아직 풀이가 적습니다.</td></tr>')
     + `</tbody></table></div></div></div>
-  <h3>많이 틀린 문항 (처음 풀 때 틀린 비율, ${minN}명 이상 푼 문항)</h3><div class="panel"><table><thead><tr><th>문항</th><th>단원</th><th class="n">배점</th><th class="n">푼 학생</th><th class="n">틀린 비율</th><th>많이 고른 오답</th></tr></thead><tbody>`
+  <h3>많이 틀린 문항 (처음 풀 때 틀린 비율, ${minN}명 이상 푼 문항)</h3><div class="panel"><table><thead><tr><th>문항</th><th>${L().unit}</th><th class="n">배점</th><th class="n">푼 학생</th><th class="n">틀린 비율</th><th>많이 고른 오답</th></tr></thead><tbody>`
     + (hard.map(([id, x]) => { const it = byId[id], top = Object.entries(x.picks).sort((a, b) => b[1] - a[1])[0]; return `<tr class="click" data-item="${id}"><td>${esc(it.label)} ${it.n}번</td><td>${esc(unitBy[it.code].name)}</td><td class="n">${it.pts}</td><td class="n">${x.n}</td><td class="n lo">${pct(x.bad, x.n)}%</td><td class="mu">${top ? (it.mc ? CIRC[+top[0]] || top[0] : top[0]) + ` (${top[1]}명)` : ''}</td></tr>` }).join('') || '<tr><td colspan="6" class="mu">아직 풀이가 적습니다.</td></tr>')
     + '</tbody></table></div>';
   main.innerHTML = h;
+  main.querySelector('#selSubj').onchange = async e => { main.innerHTML = '<p class="small">불러오는 중…</p>'; try { await loadSubj(e.target.value) } catch (err) { alert(err.message) } renderClass() };
   main.querySelector('#selCls').onchange = e => { cls = e.target.value; renderClass() };
   main.querySelector('#selPer').onchange = e => { period = e.target.value; renderClass() };
   main.querySelector('#reload').onclick = () => { delete attCache[cls]; delete studentsCache[cls]; renderClass() };
-  main.querySelector('#csv').onclick = () => download(`${cls}반_학생별.csv`, [['번호', '이름', '아이디', '푼 문항', '정답률', '최근7일 풀이', '변형 풀이', '마지막 활동']].concat(st.map(s => { const p = per[s.id]; return [s.number ?? '', s.name, s.login_id, p.items, p.items ? pct(p.ok, p.items) : '', p.week, p.v, p.lastT ? new Date(p.lastT).toLocaleString('ko-KR') : ''] })));
+  main.querySelector('#csv').onclick = () => download(`${cls}반_${L().name}_학생별.csv`, [['번호', '이름', '아이디', '푼 문항', '정답률', '최근7일 풀이', '변형 풀이', '마지막 활동']].concat(st.map(s => { const p = per[s.id]; return [s.number ?? '', s.name, s.login_id, p.items, p.items ? pct(p.ok, p.items) : '', p.week, p.v, p.lastT ? new Date(p.lastT).toLocaleString('ko-KR') : ''] })));
   main.querySelectorAll('[data-stu]').forEach(r => r.onclick = () => showStudent(per[r.dataset.stu].s, att.filter(a => a.user_id === r.dataset.stu)));
   main.querySelectorAll('[data-item]').forEach(r => r.onclick = () => showItem(r.dataset.item, byItem[r.dataset.item]));
 }
@@ -165,9 +183,9 @@ function showStudent(s, att) {
   const last = lastBy(att), byU = {};
   for (const a of last) { const u = (byU[byId[a.item_id].code] = byU[byId[a.item_id].code] || { n: 0, ok: 0 }); u.n++; if (a.ok) u.ok++ }
   const wrong = last.filter(a => !a.ok).sort((a, b) => b.t - a.t);
-  sheet(`<h2>${esc(s.name)} <span class="small">${esc(s.login_id)} · ${s.grade}학년 ${s.class}반 ${s.number ?? ''}번</span></h2>
-   <h3>단원별</h3><div class="panel"><table><thead><tr><th>단원</th><th class="n">푼 문항</th><th class="n">정답률</th></tr></thead><tbody>${UNITS.filter(u => byU[u.code]).map(u => `<tr><td>${esc(u.name)}</td><td class="n">${byU[u.code].n}</td>${pctCell(pct(byU[u.code].ok, byU[u.code].n))}</tr>`).join('') || '<tr><td colspan="3" class="mu">풀이 기록이 없습니다.</td></tr>'}</tbody></table></div>
-   <h3>지금 틀린 상태인 문항 (${wrong.length})</h3><div class="panel"><table><thead><tr><th>문항</th><th>단원</th><th>핵심 개념</th><th>푼 날</th></tr></thead><tbody>${wrong.map(a => { const it = byId[a.item_id], c = (TAGS[a.item_id] || {}).c; return `<tr class="click" data-item="${a.item_id}"><td>${esc(it.label)} ${it.n}번</td><td>${esc(unitBy[it.code].name)}</td><td class="mu">${esc(c ? TD.c[c] : '')}</td><td class="mu">${fmt(a.t)}</td></tr>` }).join('') || '<tr><td colspan="4" class="mu">없음</td></tr>'}</tbody></table></div>`);
+  sheet(`<h2>${esc(s.name)} <span class="small">${esc(s.login_id)} · ${s.grade}학년 ${s.class}반 ${s.number ?? ''}번 · ${L().name}</span></h2>
+   <h3>${L().unit}별</h3><div class="panel"><table><thead><tr><th>${L().unit}</th><th class="n">푼 문항</th><th class="n">정답률</th></tr></thead><tbody>${UNITS.filter(u => byU[u.code]).map(u => `<tr><td>${esc(u.name)}</td><td class="n">${byU[u.code].n}</td>${pctCell(pct(byU[u.code].ok, byU[u.code].n))}</tr>`).join('') || '<tr><td colspan="3" class="mu">풀이 기록이 없습니다.</td></tr>'}</tbody></table></div>
+   <h3>지금 틀린 상태인 문항 (${wrong.length})</h3><div class="panel"><table><thead><tr><th>문항</th><th>${L().unit}</th><th>${L().conc}</th><th>푼 날</th></tr></thead><tbody>${wrong.map(a => { const it = byId[a.item_id], c = (TAGS[a.item_id] || {}).c; return `<tr class="click" data-item="${a.item_id}"><td>${esc(it.label)} ${it.n}번</td><td>${esc(unitBy[it.code].name)}</td><td class="mu">${esc(c ? TD.c[c] : '')}</td><td class="mu">${fmt(a.t)}</td></tr>` }).join('') || '<tr><td colspan="4" class="mu">없음</td></tr>'}</tbody></table></div>`);
   document.querySelectorAll('#sheet [data-item]').forEach(r => r.onclick = () => showItem(r.dataset.item));
 }
 function showItem(id, x) {
@@ -278,7 +296,7 @@ async function listAll(prefix) {
 async function renderUpload() {
   main.innerHTML = '<p class="small">저장소를 확인하는 중…</p>';
   const have = new Set([...await listAll('q'), ...await listAll('s')]);
-  const needQ = ITEMS.length, needS = Object.values(window.SCOUNT || {}).reduce((a, b) => a + b, 0);
+  const needQ = MA_ITEMS.length, needS = Object.values(window.SCOUNT || {}).reduce((a, b) => a + b, 0);
   const hasQ = [...have].filter(p => p.startsWith('q/')).length, hasS = have.size - hasQ;
   main.innerHTML = `<h2>문항 이미지 올리기</h2>
   <div class="tiles"><div class="tile"><div class="k">문제 그림</div><div class="v">${hasQ} / ${needQ}</div></div><div class="tile"><div class="k">해설 그림</div><div class="v">${hasS} / ${needS}</div></div></div>
