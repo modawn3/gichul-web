@@ -325,3 +325,41 @@ body.doc main a{color:var(--accent)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (min-width:901px){#acct details summary{display:none}}
 @media (max-width:900px){body.chalk .toolbar select{flex:1 1 calc(50% - 4px);min-width:0}body.chalk .toolbar .btn{flex:1 1 auto}}
+/* ---- 휴대폰 다듬기(2026-11): 넘치는 칸, 표, 단원 목록 접기, 문제 창 ---- */
+body.chalk table.stats th,body.chalk table.stats td,body.teacher th,body.teacher td{overflow-wrap:normal}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tscroll>table{min-width:100%}
+.sidetg{display:none}
+@media (max-width:900px){
+  .app,body.chalk .layout,.split{grid-template-columns:minmax(0,1fr)}
+  body.chalk main,.work>*{min-width:0}
+  body.chalk .section,body.chalk .board{max-width:100%}
+  body.chalk select{max-width:100%}
+  body.chalk .opts label{max-width:100%;min-width:0}body.chalk .opts select{width:100%;text-overflow:ellipsis}
+  /* 표: 글자 단위로 쪼개지지 않게, 넓으면 옆으로 밀어 보기 */
+  body.chalk table.stats th,body.chalk table.stats td{padding:9px 10px;white-space:nowrap}
+  body.chalk .bar{width:64px}
+  body.teacher .panel{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  body.teacher th,body.teacher td{padding:9px 10px;white-space:nowrap}
+  /* 단원 목록: 평소엔 접어 두고 '단원 바꾸기'로 펼침 */
+  .sidetg{display:flex;align-items:center;gap:6px;margin-top:10px}
+  .sidetg::after{content:"";width:7px;height:7px;border:solid currentColor;border-width:0 2px 2px 0;transform:rotate(45deg);margin:-3px 0 0 2px}
+  body.side-open .sidetg::after{transform:rotate(-135deg);margin-top:3px}
+  body.chalk:not(.side-open) aside#side{display:none}
+  body.chalk.side-open aside#side{max-height:55vh!important;box-shadow:0 8px 18px rgba(18,34,28,.08)}
+  /* 문항 카드: 그림 높이만큼만 */
+  body.chalk .card .thumb{height:auto;max-height:200px}
+  /* 문제 창: 화면 가득, 닫기 단추는 위에 붙여 둠 */
+  body.chalk .overlay{padding:0!important}
+  body.chalk .sheet{border-radius:0;min-height:100%;box-shadow:none}
+  body.chalk .sheet .left,body.chalk .sheet .right{padding:16px 14px}
+  body.chalk .sheet .right{padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+  body.chalk .qhead{align-items:flex-start;position:sticky;top:0;z-index:2;background:var(--panel);margin:-16px -14px 10px;padding:12px 14px 8px}
+  body.chalk .qhead .close{margin:-4px -6px 0 0}
+  body.chalk .sheet .chip{font-size:11.5px;padding:1px 7px}
+  body.chalk .choices{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+  body.chalk .choices button{width:auto;height:auto;aspect-ratio:1;max-height:58px;justify-self:center;width:100%;max-width:58px;font-size:22px}
+  body.chalk .shortans input{width:100%;font-size:20px;min-height:48px}
+  body.chalk .omr{grid-template-columns:repeat(5,minmax(0,1fr))}
+  body.chalk .omr button{min-height:42px}
+}
