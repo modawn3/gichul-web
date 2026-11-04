@@ -45,7 +45,7 @@ li{margin:3px 0}
   </div>
 
   <nav class="toc">
-    <a href="#start">들어가기</a><a href="#roles">선생님과 관리자</a><a href="#accounts">학생 계정 만들기</a><a href="#pw">비밀번호 초기화</a><a href="#class">반 현황</a><a href="#admin">관리자 기능</a><a href="#faq">자주 묻는 질문</a>
+    <a href="#start">들어가기</a><a href="#roles">선생님과 관리자</a><a href="#accounts">학생 계정 만들기</a><a href="#pw">비밀번호 초기화</a><a href="#class">반 현황</a><a href="#reinf">오답 보강 노트</a><a href="#admin">관리자 기능</a><a href="#faq">자주 묻는 질문</a>
   </nav>
 
   <section id="start">
@@ -55,7 +55,7 @@ li{margin:3px 0}
       <li>오른쪽 위 <span class="btnlike">선생님 화면</span>을 누르면 선생님 화면이 열립니다. 주소 뒤에 <b>teacher.html</b>을 붙여 바로 들어와도 됩니다.</li>
       <li>선생님 화면에서 <span class="btnlike">문제 풀기</span>를 누르면 학생 화면으로 돌아갑니다. 선생님도 학생처럼 문제를 풀어 볼 수 있습니다.</li>
     </ol>
-    <p>탭은 <span class="tab">반 현황</span> <span class="tab">학생 계정</span> 두 개이고, 관리자에게는 <span class="tab">문항 이미지 올리기</span>가 하나 더 보입니다.</p>
+    <p>탭은 <span class="tab">반 현황</span> <span class="tab">오답 보강 노트</span> <span class="tab">학생 계정</span> 세 개이고, 관리자에게는 <span class="tab">문항 이미지 올리기</span>가 하나 더 보입니다.</p>
   </section>
 
   <section id="roles">
@@ -97,8 +97,26 @@ li{margin:3px 0}
     <p class="small">정답률은 문항마다 마지막으로 푼 결과로 셉니다. 틀렸다가 다시 풀어 맞히면 맞힌 것으로 바뀝니다.</p>
   </section>
 
+  <section id="reinf">
+    <h2><span class="num">6</span>오답 보강 노트 (모의고사 마킹 리스트로 학생별 인쇄본)</h2>
+    <ol>
+      <li><span class="tab">오답 보강 노트</span> 탭에서 학교 마킹 리스트 엑셀 파일을 고릅니다. 시험마다 한 파일이고, 여러 개를 함께 넣어도 됩니다(예: 6월 모평, 9월 모평, 10월 학평). 학교에서 받은 원본 그대로 넣으면 됩니다.</li>
+      <li>파일마다 <b>어느 시험인지</b> 고릅니다. 파일 이름에 연도·월이 있으면 미리 골라 둡니다.</li>
+      <li><b>반</b>과 <b>과목당 문항 수</b>(기본 10)를 정하고 <span class="btnlike p">학생별 보강 문항 고르기</span>를 누릅니다.</li>
+      <li>학생 표에서 줄 끝의 <span class="btnlike">인쇄 화면</span>(한 명) 또는 <span class="btnlike p">반 전체 인쇄 화면</span>을 누르고, 그림이 다 나오면 <span class="btnlike p">인쇄 / PDF로 저장</span>을 누릅니다. 인쇄 창에서 대상을 "PDF로 저장"으로 바꾸면 파일로 받을 수 있습니다.</li>
+    </ol>
+    <div class="ok">마킹 리스트는 <b>선생님 컴퓨터의 브라우저 안에서만</b> 읽고 서버에 올리지 않습니다. 이름 열은 읽지 않아 화면과 인쇄본에는 반·번호만 나옵니다. 창을 닫거나 새로 고치면 넣은 파일은 사라집니다.</div>
+    <ul>
+      <li>국어·영어·수학만 봅니다. 넣은 시험들의 오답을 모두 모아 <b>쉬운 문항(난이도 하→중→상) 먼저</b>, 같은 난이도면 <b>두 번 이상 시험에서 틀린 영역 먼저</b> 고르고, 한 영역에서는 3문항까지만 고릅니다.</li>
+      <li>틀린 문항마다 비슷한 <b>실제 기출</b>을 하나씩 고릅니다(변형 문항 없음). 넣은 시험 회차는 빼고, 원래 문항보다 한 단계 넘게 어려운 문항은 고르지 않습니다.</li>
+      <li>미적분·기하 선택자는 공통(1~22번)만, 영어는 읽기(18~45번)만 채점합니다. 한 시험에 답이 비어 있으면(결시) 나머지 시험 기록으로 만듭니다.</li>
+      <li>인쇄본: 한눈에 보기 표와 과목별 목록 → 2단 문항(국어는 지문 포함, 긴 지문은 글줄 사이 빈 곳에서 나눠 다음 단으로) → 정답표와 해설.</li>
+    </ul>
+    <div class="tip">반 전체는 그림이 많아 처음에 1~2분 걸릴 수 있습니다. "확인할 점" 칸에 답이 비었거나 같은 번호를 몰아 찍은 것으로 보이는 시험이 나오니, 그 학생의 자료는 한 번 더 살펴 주세요.</div>
+  </section>
+
   <section id="admin">
-    <h2><span class="num">6</span>관리자 기능</h2>
+    <h2><span class="num">7</span>관리자 기능</h2>
     <ul>
       <li><b>선생님 계정 만들기</b>: 명단에 <b>역할</b> 열을 "선생님"으로, <b>담당반</b> 열에 <b>3-1;3-2</b>처럼 적어 학생과 같은 방법으로 만듭니다.</li>
       <li><b>담당 반 지정</b>: 선생님 아이디와 반(예: 3-1;3-2)을 넣고 <span class="btnlike">지정</span>.</li>
