@@ -414,7 +414,7 @@ function renderStats(){
   const tried=ITEMS.filter(i=>DB.att[i.id]); const ok=tried.filter(i=>last(i.id).ok).length;
   const rows=UNITS.map(u=>({u,s:unitStats(u.code)}));
   const weak=rows.filter(r=>r.s.tried>=2).sort((a,b)=>a.s.acc-b.s.acc).slice(0,3).filter(r=>r.s.acc<80);
-  let h=`<div class="unithead"><h2>학습 현황</h2><p>이 컴퓨터의 브라우저에 저장된 풀이 기록입니다. (마지막 풀이 기준)</p></div>
+  let h=`<div class="unithead"><h2>학습 현황</h2><p>내 계정에 저장된 풀이 기록입니다. (마지막 풀이 기준)</p></div>
   <div class="kpis"><div class="kpi"><b>${tried.length}</b><span>푼 문항 / ${ITEMS.length}</span></div><div class="kpi"><b>${tried.length?Math.round(ok/tried.length*100)+'%':'-'}</b><span>정답률</span></div><div class="kpi"><b>${ITEMS.filter(i=>status(i.id)==='bad').length}</b><span>틀린 상태인 문항</span></div></div>`;
   if(weak.length) h+=`<div class="intent" style="margin-bottom:16px"><b>약한 영역:</b> `+weak.map(r=>`<a href="#" data-u="${r.u.code}">${r.u.name} (${r.s.acc}%)</a>`).join(', ')+` 영역을 먼저 복습해 보세요.</div>`;
   h+='<table class="stats"><tr><th>구분</th><th>영역</th><th>문항</th><th>푼 문항</th><th>정답률</th><th></th></tr>'+rows.map(({u,s})=>`<tr><td>${u.subject}</td><td><a href="#" data-u="${u.code}">${u.name}</a></td><td>${s.n}</td><td>${s.tried}</td><td>${s.acc===null?'-':s.acc+'%'}</td><td><div class="bar"><i style="width:${s.acc||0}%"></i></div></td></tr>`).join('')+'</table>';
