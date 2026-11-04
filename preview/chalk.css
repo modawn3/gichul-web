@@ -142,6 +142,8 @@ body.chalk .vtag{background:#ece6f7;color:#5b3aa6}
 
 /* 홈: 단원 지도 */
 .umap{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.umap.n4{grid-template-columns:repeat(2,minmax(0,1fr))}
+.chalk .ksel .btn.on{background:var(--slate);color:var(--chalk);border-color:var(--slate)}
 .umap .subjcol{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 16px 12px;box-shadow:var(--shadow)}
 .umap .subjcol h3{margin:0 0 4px;font-size:17px;display:flex;justify-content:space-between;align-items:baseline}
 .umap .subjcol h3 span{font-size:13px;color:var(--muted);font-weight:500}
@@ -252,7 +254,7 @@ body.chalk .gw-loading{background:var(--bg);color:var(--muted)}
   .chain .link{height:18px;width:2px;margin-left:22px}
   .chain .link::before{left:0;right:auto;top:0;bottom:4px;width:2px;height:auto;margin:0;transform-origin:top;animation-name:drawv}
   .chain .link::after{left:-4px;right:auto;top:auto;bottom:2px;transform:rotate(135deg);margin:0}
-  .umap{grid-template-columns:1fr}
+  .umap,.umap.n4{grid-template-columns:1fr}
   .tt,.tt tbody,.tt tr{display:block;margin:0}.tt thead{display:none}.tt td{display:block;width:auto}
   .tt tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:16px}
   .tt th.yr{grid-column:1/-1;width:auto;padding:0}
@@ -263,6 +265,63 @@ body.chalk .gw-loading{background:var(--bg);color:var(--muted)}
 }
 @keyframes drawv{from{transform:scaleY(0)}to{transform:scaleY(1)}}
 @media print{.rail,nav.tabs{display:none!important}.app{display:block}.work{padding:0!important}}
+ /* ---- 선생님 화면 ---- */
+body.teacher main{max-width:1240px;margin:0}
+body.teacher main>h2,body.teacher main h2:not(#cbh){font-size:22px;letter-spacing:-.01em}
+.cboard{padding:22px 26px}
+.cboard .per{font-size:13px;color:var(--chalk-mu)}
+.cboard .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:0}
+.cboard .tile{background:none;border:0;border-left:1px solid var(--slate-line);border-radius:0;padding:4px 18px}
+.cboard .tile:first-child{border-left:0;padding-left:0}
+.cboard .tile .k{color:var(--chalk-mu);font-size:13px}
+.cboard .tile .v{color:var(--chalk);font-size:30px;font-weight:700}
+body.teacher .panel{border-radius:var(--r-lg);border-color:var(--line);box-shadow:var(--shadow);padding:0}
+body.teacher th{background:#f5f7f4;color:var(--muted);font-size:13px;font-weight:600}
+body.teacher th,body.teacher td{padding:10px 14px;border-color:var(--line)}
+body.teacher tr.click:hover td,body.teacher tr.click:focus-visible td{background:var(--accent-soft)}
+body.teacher tr.click:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+body.teacher h3{margin:28px 0 10px}
+body.teacher .two{gap:20px}
+body.teacher .two>*{min-width:0}
+body.teacher #acct .panel{background:none;border:0;box-shadow:none;padding:0;border-radius:0;overflow:visible}
+body.teacher .note{background:var(--warn-soft);border-radius:var(--r)}
+body.teacher input[type=text],body.teacher textarea{border-color:var(--line-2);border-radius:9px}
+body.teacher input[type=text]{min-height:40px}
+body.teacher .ov{background:rgba(16,32,26,.55)}
+body.teacher .sheet{border-radius:16px;box-shadow:0 20px 60px rgba(10,24,18,.3);padding:22px 24px}
+body.teacher .lo{color:var(--bad)}body.teacher .hi{color:var(--ok)}
+@media (max-width:900px){
+  .cboard{padding:18px 16px}
+  .cboard .tiles{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:14px}
+  .cboard .tile:nth-child(3){border-left:0;padding-left:0}
+  .cboard .tile .v{font-size:24px}
+  body.teacher nav.tabs button{font-size:11px}
+  body.teacher #acct .panel{background:var(--slate);border:1px solid var(--slate-line);border-radius:12px;padding:14px;box-shadow:0 12px 30px rgba(0,0,0,.3)}
+}
+/* ---- 사용 설명서 ---- */
+body.doc header{background:var(--slate);color:var(--chalk);border:0;padding:14px 24px}
+body.doc header h1{font-size:22px}
+body.doc header h1 small{display:block;font-size:12px;font-weight:500;color:var(--chalk-mu)}
+body.doc header a{background:var(--chalk);color:var(--slate);border-color:var(--chalk);font-weight:600;padding:8px 14px;min-height:40px;display:inline-flex;align-items:center}
+body.doc main{max-width:780px;padding:28px 18px 64px;margin:0 auto}
+body.doc .intro{background:var(--slate-2);color:var(--chalk);border-radius:var(--r-lg);padding:18px 20px}
+body.doc .intro a{color:var(--yellow-soft)}
+body.doc nav.toc{flex-direction:row;gap:6px}
+body.doc nav.toc a{border-color:var(--line-2);padding:6px 12px;min-height:34px}
+body.doc nav.toc a:hover{border-color:var(--accent);color:var(--accent)}
+body.doc section{border-color:var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:22px 24px;margin-bottom:16px}
+body.doc section h2{font-size:20px}
+body.doc section h3{font-size:15.5px;margin:16px 0 4px}
+body.doc .num{background:var(--slate);color:var(--yellow);font-weight:700}
+body.doc .tab{background:var(--accent-soft);color:var(--accent)}
+body.doc .btnlike{border-color:var(--line-2);background:#f5f7f4}
+body.doc .btnlike.p{background:var(--slate);border-color:var(--slate);color:var(--chalk)}
+body.doc .flow span.s{background:#f5f7f4;border-color:var(--line-2)}
+body.doc .flow span.s.bad{background:var(--bad-soft);border-color:#efc6c0}
+body.doc .flow i{color:#9a7a12;font-weight:700}
+body.doc .ok{background:var(--ok-soft)}body.doc .tip{background:var(--warn-soft)}
+body.doc main a{color:var(--accent)}
+@media (max-width:600px){body.doc header{padding:10px 14px}body.doc section{padding:18px 16px}}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (min-width:901px){#acct details summary{display:none}}
 @media (max-width:900px){body.chalk .toolbar select{flex:1 1 calc(50% - 4px);min-width:0}body.chalk .toolbar .btn{flex:1 1 auto}}

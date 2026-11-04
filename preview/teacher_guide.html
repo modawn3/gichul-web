@@ -33,10 +33,12 @@ li{margin:3px 0}
 .flow i{font-style:normal;color:var(--muted)}
 .small{font-size:13px;color:var(--muted)}
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="chalk.css">
 </head>
-<body>
+<body class="chalk doc">
 <header>
-  <h1>선생님용 사용 설명서</h1>
+  <h1><small>수능 기출 학습</small>선생님용 사용 설명서</h1>
   <a href="teacher.html">선생님 화면으로</a>
 </header>
 <main>
@@ -52,10 +54,10 @@ li{margin:3px 0}
     <h2><span class="num">1</span>들어가기</h2>
     <ol>
       <li>학생 사이트(<a href="./">이 주소</a>)에서 받은 선생님 아이디로 로그인합니다.</li>
-      <li>오른쪽 위 <span class="btnlike">선생님 화면</span>을 누르면 선생님 화면이 열립니다. 주소 뒤에 <b>teacher.html</b>을 붙여 바로 들어와도 됩니다.</li>
-      <li>선생님 화면에서 <span class="btnlike">문제 풀기</span>를 누르면 학생 화면으로 돌아갑니다. 선생님도 학생처럼 문제를 풀어 볼 수 있습니다.</li>
+      <li>왼쪽 메뉴 맨 아래(휴대폰은 오른쪽 위 동그라미)의 <span class="btnlike">선생님 화면</span>을 누르면 선생님 화면이 열립니다. 주소 뒤에 <b>teacher.html</b>을 붙여 바로 들어와도 됩니다.</li>
+      <li>선생님 화면에서도 같은 자리의 <span class="btnlike">문제 풀기</span>를 누르면 학생 화면으로 돌아갑니다. 선생님도 학생처럼 문제를 풀어 볼 수 있습니다.</li>
     </ol>
-    <p>탭은 <span class="tab">반 현황</span> <span class="tab">오답 보강 노트</span> <span class="tab">학생 계정</span> 세 개이고, 관리자에게는 <span class="tab">문항 이미지 올리기</span>가 하나 더 보입니다(지금은 그림이 자동으로 올라가서 쓸 일이 거의 없습니다).</p>
+    <p>화면은 왼쪽 짙은 녹색 메뉴(휴대폰은 화면 맨 아래 메뉴)로 바꿉니다. 메뉴는 <span class="tab">반 현황</span> <span class="tab">오답 보강 노트</span> <span class="tab">학생 계정</span> 세 개이고, 관리자에게는 <span class="tab">문항 이미지 올리기</span>가 하나 더 보입니다(지금은 그림이 자동으로 올라가서 쓸 일이 거의 없습니다).</p>
   </section>
 
   <section id="roles">
@@ -87,9 +89,9 @@ li{margin:3px 0}
 
   <section id="class">
     <h2><span class="num">5</span>반 현황 보기</h2>
-    <p>위의 칸에서 <b>과목</b>(수학, 영어, 국어), <b>반</b>, <b>기간</b>(전체, 최근 7일, 최근 30일)을 고릅니다. 표는 고른 과목의 기록만 셉니다. 영어는 단원 대신 <b>유형</b>과 <b>소재</b>, 국어는 <b>영역</b>과 <b>문항 유형</b>으로 나옵니다.</p>
+    <p>위의 칸에서 <b>과목</b>(수학, 영어, 국어), <b>반</b>, <b>기간</b>(전체, 최근 7일, 최근 30일)을 고릅니다. 바로 아래 짙은 녹색 칠판에 반 이름과 학생 수, 최근 7일 푼 학생, 풀이 수, 반 정답률이 나옵니다. 표는 고른 과목의 기록만 셉니다. 영어는 단원 대신 <b>유형</b>과 <b>소재</b>, 국어는 <b>영역</b>과 <b>문항 유형</b>으로 나옵니다.</p>
     <ul>
-      <li><b>학생별</b>: 푼 문항 수, 정답률, 최근 7일 풀이 수, 변형 문제 풀이 수, 마지막 활동. 학생 이름을 누르면 그 학생의 <b>단원별 정답률</b>과 <b>지금 틀린 상태인 문항</b>이 나옵니다.</li>
+      <li><b>학생별</b>: 푼 문항 수, 정답률, 최근 7일 풀이 수, 변형 문제 풀이 수, 마지막 활동. 학생 줄을 누르면(키보드는 Tab으로 가서 Enter) 그 학생의 <b>단원별 정답률</b>과 <b>지금 틀린 상태인 문항</b>이 나옵니다.</li>
       <li><b>단원별 정답률</b>, <b>약한 핵심 개념</b>(정답률 낮은 순): 수업에서 다시 다룰 단원·개념을 고를 때 씁니다.</li>
       <li><b>많이 틀린 문항</b>: 처음 풀 때 틀린 학생 비율이 높은 순서이고, <b>많이 고른 오답</b>도 보여 줍니다. 문항을 누르면 문제 그림과 정답이 나옵니다.</li>
     </ul>
