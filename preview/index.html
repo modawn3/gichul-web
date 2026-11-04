@@ -6,6 +6,7 @@
 <title>수능 수학 기출 학습</title>
 <link rel="stylesheet" href="katex.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{--bg:#f6f7f9;--panel:#fff;--line:#e2e5ea;--text:#1d2330;--muted:#6b7385;--accent:#2f6fde;--accent-soft:#e8f0fd;--ok:#1f9d55;--ok-soft:#e6f6ec;--bad:#d64545;--bad-soft:#fdeceb;--warn:#b7791f;--warn-soft:#fdf5e6}
 *{box-sizing:border-box}
@@ -194,26 +195,33 @@ body.notags .chip[data-tag]{cursor:default}body.notags .chip[data-tag]:hover{bor
 .exlist .setact button{padding:2px 8px;font-size:12px;border-color:var(--line)}
 .exlist .setprt{color:var(--accent)}.exlist .setprt:hover{border-color:var(--accent);background:var(--accent-soft)}
 </style>
+<link rel="stylesheet" href="chalk.css">
 </head>
-<body>
-<header>
-  <h1>수능 수학 기출 학습</h1>
-  <nav class="tabs">
-    <button data-tab="units">문항 선택</button>
-    <button data-tab="exam" class="on">모의고사 풀기</button>
+<body class="chalk">
+<div class="app">
+<div class="rail">
+  <h1 class="brand"><small>수능 기출 학습 </small><b>수학</b></h1>
+  <nav class="tabs" aria-label="메뉴">
+    <button data-tab="home" class="on"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="1.5"/><path d="M7 21h10M12 17v4M7 10l3 3 7-6"/></svg><span>내 칠판</span></button>
+    <button data-tab="exam"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M8 13h3M8 17h6"/></svg><span>모의고사</span></button>
+    <button data-tab="units"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h10"/><circle cx="19" cy="19" r="2"/></svg><span>문항 선택</span></button>
     <button data-tab="review" hidden>오늘의 복습 <span id="dueCount" class="badge due">0</span></button>
     <button data-tab="tags" hidden>태그로 찾기</button>
-    <button data-tab="wrong">오답노트 <span id="wrongCount" class="badge bad">0</span></button>
-    <button data-tab="stats">학습 현황</button>
+    <button data-tab="wrong"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9.5 12.5l5 5M14.5 12.5l-5 5"/></svg><span>오답노트</span> <span id="wrongCount" class="badge bad">0</span></button>
+    <button data-tab="stats"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>학습 현황</span></button>
   </nav>
-  <span style="flex:1"></span>
-  <span class="small">2024~2026 수능·모평·학평 · 공통 + 확률과 통계 · 2022 개정 교육과정 분류 · 문항 태그</span>
-</header>
+  <div class="spacer"></div>
+  <div class="subj" aria-label="과목"><span aria-current="page">수학</span><a href="korean.html">국어</a><a href="english.html">영어</a></div>
+  <div id="acct"></div>
+</div>
+<div class="work">
 <div class="layout">
-  <aside id="side"></aside>
+  <aside id="side" aria-label="단원 목록"></aside>
   <main id="main"></main>
 </div>
-<div class="overlay" id="ov"><div class="sheet" id="sheet"></div></div>
+</div>
+</div>
+<div class="overlay" id="ov"><div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="문제 풀기"></div></div>
 <div id="paper"></div>
 
 <script src="supabase.js"></script>
@@ -321,7 +329,7 @@ function refreshBadges(){
   document.getElementById('dueCount').textContent=dueIds().length;
 }
 
-let state={tab:'exam',unit:'A1',year:'all',exam:'all',pts:'all',diff:'all',conc:'all',sw:'all',view:'cards',tsel:[],tg:'c'};
+let state={tab:'home',unit:'A1',year:'all',exam:'all',pts:'all',diff:'all',conc:'all',sw:'all',view:'cards',tsel:[],tg:'c'};
 
 // 'ALL' = 단원 구분 없이 전체 문제
 const ALLU={code:'ALL',name:'전체 문제',subject:'전체',mid:'모든 단원'};
@@ -337,8 +345,8 @@ function renderSide(){
   let h='',subj='',mid='';
   {const s=unitStats('ALL');h+=`<div class="unit ${state.unit==='ALL'&&state.tab==='units'?'on':''}" data-u="ALL"><span><b>전체 문제</b></span><span class="r">${s.acc!==null?`<span class="acc">${s.acc}%</span>`:''}<span class="badge">${s.n}</span></span></div>`}
   for(const u of UNITS){
-    if(u.subject!==subj){subj=u.subject;h+=`<h3>${subj}</h3>`;mid=''}
-    if(u.mid!==mid){mid=u.mid;h+=`<h4>${mid}</h4>`}
+    if(u.subject!==subj){subj=u.subject;h+=`<h2 class="sh">${subj}</h2>`;mid=''}
+    if(u.mid!==mid){mid=u.mid;h+=`<h3 class="sm">${mid}</h3>`}
     const s=unitStats(u.code);
     h+=`<div class="unit ${state.unit===u.code&&state.tab==='units'?'on':''}" data-u="${u.code}"><span>${u.name}</span><span class="r">${s.acc!==null?`<span class="acc">${s.acc}%</span>`:''}<span class="badge">${s.n}</span></span></div>`;
   }
@@ -397,8 +405,9 @@ function renderWrong(){
   if(!ids.length) return h+'<div class="empty">아직 틀린 문제가 없습니다.</div>';
   const card=id=>{const i=byId[id];return `<div class="card" data-id="${id}"><div class="meta"><span><b>${i.label}</b> ${i.n}번 <span class="pt">${unitBy[i.code].name}</span></span>${stBadge(id)}</div><div class="thumb"><img loading="lazy" ${QIMG(id)} alt=""></div></div>`};
   if(HAS_TAGS&&now.length) h+=`<div class="toolbar"><button class="btn primary" id="simSet">틀린 문제와 태그가 비슷한 문제 모아 풀기</button><span class="small">틀린 문제마다 태그가 가장 비슷한 기출 3문항씩 (이미 맞힌 문제는 뺌)</span></div>`;
-  h+=`<h3>아직 틀린 상태 (${now.length})</h3>`+(now.length?'<div class="grid">'+now.map(card).join('')+'</div>':'<p class="small">모두 다시 풀어 맞혔습니다.</p>');
-  if(fixed.length) h+=`<h3 style="margin-top:24px">다시 풀어 맞힘 (${fixed.length})</h3><div class="grid">`+fixed.map(card).join('')+'</div>';
+  const byU=l=>{const g={};l.forEach(id=>{(g[byId[id].code]=g[byId[id].code]||[]).push(id)});return UNITS.filter(u=>g[u.code]).map(u=>`<div class="grouphead"><h4 style="margin:0;font-size:15px">${u.name}</h4><span>${u.subject} · ${g[u.code].length}문제</span></div><div class="grid">${g[u.code].map(card).join('')}</div>`).join('')};
+  h+=`<h3 style="margin-top:8px">아직 틀린 상태 (${now.length})</h3>`+(now.length?byU(now):'<p class="small">모두 다시 풀어 맞혔습니다.</p>');
+  if(fixed.length) h+=`<h3 style="margin-top:32px">다시 풀어 맞힘 (${fixed.length})</h3><div class="grid">`+fixed.map(card).join('')+'</div>';
   return h;
 }
 function renderStats(){
@@ -497,16 +506,63 @@ function makeMixed(opt){
 // 2027학년도 수능(2026-11-19)까지는 지금 고3이 원순열을 배우므로 '2022 개정 범위만'을 숨기고 끈 채로 둔다.
 // 2026-11-20부터 다시 보이고 기본으로 켜진다.
 function SHOW22(){return Date.now()>=new Date(2026,10,20).getTime()}
+// ---- 내 칠판(첫 화면): 틀린 문제 → 변형 → 비슷한 기출을 판서 선으로 잇고, 아래에 단원 지도 ----
+const PDFI='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M9.5 13h5M9.5 16.5h5"/></svg>';
+function lastT(id){const a=DB.att[id];return a&&a.length?a[a.length-1].t||0:0}
+function nextVar(id){if(!VARS[id])return null;for(let lv=1;lv<=VARS[id].length;lv++){const l=vlast(id,lv);if(!l||!l.ok)return {lv,l}}return {lv:VARS[id].length,l:vlast(id,VARS[id].length),all:true}}
+function chainHtml(id){
+  const i=byId[id],u=unitBy[i.code];
+  let h=`<div class="chain"><button class="node src" data-q="${id}"><b>${i.label} ${i.n}번</b><small>${u.name} · ${i.pts}점 · <span class="x">틀림</span></small></button><span class="link" aria-hidden="true"></span>`;
+  const nv=nextVar(id);
+  h+=nv?`<button class="node ${nv.all?'done':''}" data-qv="${id}|${nv.lv}"><b>변형 ${nv.lv}단계</b><small>${nv.all?'<span class="ok">3단계까지 맞힘</span>':nv.l?'지난번 틀림 · 다시 풀기':'숫자·조건을 바꾼 같은 문제'}</small></button>`
+       :`<span class="node none"><b>변형 없음</b><small>이 문항은 변형 문제가 없습니다</small></span>`;
+  h+=`<span class="link" aria-hidden="true"></span>`;
+  const sim=HAS_TAGS?similar(i,30).find(x=>status(x.j.id)!=='ok'&&x.j.id!==id):null;
+  h+=sim?`<button class="node" data-qs="${sim.j.id}"><b>${sim.j.label} ${sim.j.n}번</b><small>비슷한 기출${sim.pct!=null?' · '+sim.pct+'% 비슷':''}</small></button>`
+        :`<span class="node none"><b>비슷한 기출</b><small>남은 문제가 없습니다</small></span>`;
+  return h+'</div>';
+}
+function renderHome(){
+  const tried=ITEMS.filter(i=>DB.att[i.id]), ok=tried.filter(i=>last(i.id).ok).length;
+  const wrong=ITEMS.filter(i=>status(i.id)==='bad').map(i=>i.id).sort((a,b)=>lastT(b)-lastT(a));
+  let h='';
+  if(DB.live) h+=`<div class="resume"><b>풀던 시험이 있습니다</b><span>${DB.live.title} · 답한 문항 ${Object.keys(DB.live.ans).length}/30</span><button class="btn primary" id="resume">이어서 풀기</button></div>`;
+  h+=`<section class="board" aria-labelledby="bh"><div class="bh"><h2 id="bh">다음에 풀 것</h2><div class="tally"><span><b>${tried.length}</b>문항 풂</span><span><b>${tried.length?Math.round(ok/tried.length*100)+'%':'–'}</b>정답률</span><span><b>${wrong.length}</b>틀린 상태</span></div></div>`;
+  if(wrong.length){
+    h+=`<p class="lead">최근에 틀린 문제부터, 같은 문제의 변형과 태그가 비슷한 기출을 이어 두었습니다. 왼쪽부터 차례로 풀어 보세요.</p>`;
+    h+=wrong.slice(0,4).map(chainHtml).join('');
+    h+=`<div class="more">${wrong.length>4?`<button class="btn" data-goto="wrong">오답노트에서 ${wrong.length}문제 모두 보기</button>`:''}<button class="btn ghost" data-goto="exam">모의고사 고르기</button></div>`;
+  }else{
+    h+=`<p class="lead">${tried.length?'지금 틀린 상태인 문제가 없습니다. 새 회차를 풀면 틀린 문제와 다음 연습이 여기에 이어집니다.':'아직 푼 문제가 없습니다. 모의고사 한 회를 풀면, 틀린 문제마다 변형 문제와 비슷한 기출이 여기에 이어집니다.'}</p><div class="more"><button class="btn" data-goto="exam">모의고사 고르기</button><button class="btn ghost" data-goto="units">단원별로 풀기</button></div>`;
+  }
+  h+='</section>';
+  h+=`<div class="unithead"><h2>단원 지도</h2><p>단원마다 마지막으로 푼 결과의 정답률입니다. 단원을 누르면 그 단원 문제로 갑니다.</p></div>
+  <div class="legend"><span><i style="background:#c8574b"></i>50% 미만</span><span><i style="background:#d9a73a"></i>50~79%</span><span><i style="background:#3c9a64"></i>80% 이상</span><span><i style="background:#e7ebe7"></i>아직 안 풂</span></div><div class="umap">`;
+  const subs=[...new Set(UNITS.map(u=>u.subject))];
+  h+=subs.map(sb=>{const us=UNITS.filter(u=>u.subject===sb),mids=[...new Set(us.map(u=>u.mid))];
+    const st=us.reduce((a,u)=>{const s=unitStats(u.code);a.t+=s.tried;a.o+=s.ok;return a},{t:0,o:0});
+    return `<div class="subjcol"><h3>${sb}<span>${st.t?Math.round(st.o/st.t*100)+'%':'–'}</span></h3>`+mids.map(m=>`<h4>${m}</h4>`+us.filter(u=>u.mid===m).map(u=>{const s=unitStats(u.code),c=s.acc==null?'':s.acc<50?'h-lo':s.acc<80?'h-mid':'h-hi';
+      return `<button class="urow ${c}" data-unit="${u.code}"><span>${u.name}</span><span class="v">${s.acc==null?s.n+'문항':s.acc+'% · '+s.tried+'/'+s.n}</span><span class="heat"><i style="width:${s.acc||0}%"></i></span></button>`}).join('')).join('')+'</div>'}).join('');
+  return h+'</div>';
+}
 function renderExam(){
-  let h=`<div class="unithead"><h2>모의고사 풀기</h2><p>30문항(공통 22 + 확률과 통계 8)을 100분 동안 풀고 한꺼번에 채점합니다. 채점 뒤 문항을 누르면 해설을 볼 수 있습니다.</p></div>`;
-  if(DB.live) h+=`<div class="section"><h3>풀던 시험이 있습니다</h3><p class="small">${DB.live.title} · 답한 문항 ${Object.keys(DB.live.ans).length}/30</p><div class="toolbar"><button class="btn primary" id="resume">이어서 풀기</button><button class="btn" id="quit">그만두기</button></div></div>`;
-  h+=`<div class="section"><h3>기존 회차로 풀기</h3><div class="exlist">`+EXAMS.map(e=>`<div class="setitem"><button data-exam="${e}">${byId[e+'_01'].label}<span class="sub">${bestOf(byId[e+'_01'].label)}</span></button><span class="setact"><button class="setprt" data-prtexam="${e}" title="실제 시험지 양식으로 인쇄·PDF 저장">시험지 PDF</button></span></div>`).join('')+'</div></div>';
-  h+=`<div class="section"><h3>섞어서 새 회차 만들기</h3><p class="small">여러 회차의 문항을 섞어 한 회분을 새로 만듭니다. 각 번호는 다른 회차의 같은 번호 문항에서 가져오므로 배점(2·3·4점)과 문항 유형이 실제 시험과 같고, 단원별 문항 수도 실제 시험 범위 안에서 맞춥니다. 모든 중단원이 한 문항 이상 들어갑니다.</p>
+  let h=`<div class="unithead"><h2>모의고사</h2><p>30문항(공통 22 + 확률과 통계 8)을 100분 동안 풀고 한꺼번에 채점합니다. 채점 뒤 문항을 누르면 해설을 볼 수 있습니다.</p></div>`;
+  if(DB.live) h+=`<div class="resume"><b>풀던 시험이 있습니다</b><span>${DB.live.title} · 답한 문항 ${Object.keys(DB.live.ans).length}/30</span><button class="btn" id="quit">그만두기</button><button class="btn primary" id="resume" style="margin-left:0">이어서 풀기</button></div>`;
+  // 시행 연도 × 시행 월 시간표. 4월과 5월 학평은 해마다 한 번만 있어 한 칸에 둔다.
+  const COLS=[['3월 학평',m=>m===3],['4·5월 학평',m=>m===4||m===5],['6월 모평',m=>m===6],['7월 학평',m=>m===7],['9월 모평',m=>m===9],['10월 학평',m=>m===10],['수능',m=>m===11]];
+  const years=[...new Set(EXAMS.map(e=>byId[e+'_01'].y))].sort((a,b)=>b-a);
+  const cell=e=>{const it=byId[e+'_01'],rs=DB.results.filter(r=>r.title===it.label),has=rs.length>0;
+    return `<div class="cell ${it.kind==='모평'?'moe':it.kind==='수능'?'csat':''} ${has?'has':''}"><button class="go" data-exam="${e}" aria-label="${it.label} 풀기${has?', 최고 '+Math.max(...rs.map(r=>r.score))+'점':''}"><b>${has?'최고 '+Math.max(...rs.map(r=>r.score))+'점':'안 풂'}</b><small>${it.kind==='학평'?(+it.ym.slice(5))+'월 학평':it.label.replace(/^(\d{4})학년도 (.*)$/,'$2 · $1학년도')}${has?' · '+rs.length+'회 응시':''}</small></button><button class="pdf" data-prtexam="${e}" aria-label="${it.label} 시험지 PDF" title="실제 시험지 양식으로 인쇄·PDF 저장">${PDFI}</button></div>`};
+  h+=`<section class="section"><h3>기존 회차로 풀기</h3><p class="small" style="margin:0 0 12px">칸을 누르면 바로 시작합니다. 오른쪽 아래 종이 표시는 실제 시험지 양식 PDF입니다.</p>
+  <table class="tt"><thead><tr><th class="yr" scope="col"><span class="sr">시행 연도</span></th>${COLS.map(c=>`<th scope="col">${c[0]}</th>`).join('')}</tr></thead><tbody>`+
+  years.map(y=>`<tr><th class="yr" scope="row">${y}</th>`+COLS.map(([n,f])=>{const e=EXAMS.find(e=>{const it=byId[e+'_01'];return it.y===y&&f(+it.ym.slice(5))});return e?`<td>${cell(e)}</td>`:`<td class="none"><div class="cell empty">아직 없음</div></td>`}).join('')+'</tr>').join('')+
+  `</tbody></table><div class="ttkey"><span><i></i>교육청 학력평가</span><span><i class="k-moe"></i>평가원 모의평가</span><span><i class="k-csat"></i>수능</span></div></section>`;
+  h+=`<div class="split"><section class="section"><h3>섞어서 새 회차 만들기</h3><p class="small">여러 회차에서 같은 번호 문항을 가져와 한 회분을 만듭니다. 배점과 문항 유형은 실제 시험과 같고, 모든 중단원이 한 문항 이상 들어갑니다.</p>
    <div class="opts"><label ${SHOW22()?'':'hidden'}><input type="checkbox" id="o22" ${SHOW22()?'checked':''}> 2022 개정 범위만 (원순열 빼기)</label><label><input type="checkbox" id="ofresh" checked> 안 푼 문제 먼저</label><label><input type="checkbox" id="oweak"> 약한 단원·틀린 문제 더 넣기</label></div>
-   ${Object.keys(VARS).length?`<div class="opts"><label>문항: <select id="ovar"><option value="">기출 원문항 그대로</option><option value="1">변형 1단계 (숫자 바꾸기)</option><option value="2">변형 2단계 (조건·발문 바꾸기)</option><option value="3">변형 3단계 (구조 바꾸기)</option><option value="mix">혼합 변형 (쉬운 번호 1단계·중간 2단계·어려운 번호 3단계)</option></select></label></div>`:''}
-   <div class="toolbar"><button class="btn primary" id="mkmix">새 회차 만들기</button></div></div>`;
-  if(DB.sets.length) h+=`<div class="section"><h3>내가 만든 회차</h3><div class="exlist">`+DB.sets.map((s,k)=>`<div class="setitem"><button data-set="${k}">${s.title}<span class="sub">${fmtDate(s.t)} 만듦 · ${bestOf(s.title)}</span></button><span class="setact"><button class="setprt" data-prtset="${k}" title="실제 시험지 양식으로 인쇄·PDF 저장">시험지 PDF</button><button class="setdel" data-setdel="${k}" title="이 회차를 목록에서 지우기">삭제</button></span></div>`).join('')+'</div></div>';
-  if(DB.results.length) h+=`<div class="section"><h3>지난 응시 기록</h3><table class="stats"><tr><th>날짜</th><th>회차</th><th>점수</th><th>맞은 문항</th><th>걸린 시간</th><th></th></tr>`+DB.results.map((r,k)=>[r,k]).reverse().map(([r,k])=>`<tr><td>${fmtDate(r.t)}</td><td>${r.title}</td><td><b>${r.score}</b>점</td><td>${r.ok}/30</td><td>${Math.round(r.secs/60)}분</td><td><a href="#" data-res="${k}">결과 보기</a></td></tr>`).join('')+'</table></div>';
+   ${Object.keys(VARS).length?`<div class="opts"><label>문항 <select id="ovar" class="btn"><option value="">기출 원문항 그대로</option><option value="1">변형 1단계 (숫자 바꾸기)</option><option value="2">변형 2단계 (조건·발문 바꾸기)</option><option value="3">변형 3단계 (구조 바꾸기)</option><option value="mix">혼합 변형 (쉬운 번호 1단계·중간 2단계·어려운 번호 3단계)</option></select></label></div>`:''}
+   <div class="toolbar" style="margin:4px 0 0"><button class="btn primary" id="mkmix">새 회차 만들기</button></div></section>
+   <section class="section"><h3>내가 만든 회차</h3>${DB.sets.length?'<ul class="mysets">'+DB.sets.map((s,k)=>`<li><div class="t"><button data-set="${k}">${s.title}</button><small>${fmtDate(s.t)} 만듦 · ${bestOf(s.title)}</small></div><button class="btn" data-prtset="${k}" title="실제 시험지 양식으로 인쇄·PDF 저장">시험지 PDF</button><button class="btn del" data-setdel="${k}" title="이 회차를 목록에서 지우기">삭제</button></li>`).join('')+'</ul>':'<p class="small" style="margin:0">아직 만든 회차가 없습니다. 왼쪽에서 조건을 고르고 새 회차를 만들면 여기에 쌓입니다.</p>'}</section></div>`;
+  if(DB.results.length) h+=`<section class="section"><h3>지난 응시 기록</h3><table class="stats"><tr><th>날짜</th><th>회차</th><th>점수</th><th>맞은 문항</th><th>걸린 시간</th><th></th></tr>`+DB.results.map((r,k)=>[r,k]).reverse().map(([r,k])=>`<tr><td>${fmtDate(r.t)}</td><td>${r.title}</td><td><b>${r.score}</b>점</td><td>${r.ok}/30</td><td>${Math.round(r.secs/60)}분</td><td><a href="#" data-res="${k}">결과 보기</a></td></tr>`).join('')+'</table></section>';
   return h;
 }
 function bestOf(title){const rs=DB.results.filter(r=>r.title===title);return rs.length?`최고 ${Math.max(...rs.map(r=>r.score))}점 · ${rs.length}회 응시`:'아직 안 풂'}
@@ -516,7 +572,7 @@ function examLeft(){return 100*60-Math.floor((Date.now()-DB.live.start)/1000)}
 function fmtTime(s){const neg=s<0;s=Math.abs(s);return (neg?'-':'')+String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
 function drawExam(){
   const L=DB.live, id=L.ids[L.cur], X=xp(id), it=X.it, a=L.ans[id];
-  let left=`<div class="qhead"><div><b>${L.cur+1}번</b> <span class="pt">${it.pts}점</span><div class="small">${L.title}</div></div><button class="close" title="잠시 나가기 (이어 풀 수 있음)">✕</button></div>${X.V?`<div class="vq">${tex(X.V.q)}</div>`:`<img ${QIMG(X.id)} alt="문제">`}`;
+  let left=`<div class="qhead"><div><b>${L.cur+1}번</b> <span class="pt">${it.pts}점</span><div class="small">${L.title}</div></div><button class="close" aria-label="잠시 나가기" title="잠시 나가기 (이어 풀 수 있음)">✕</button></div>${X.V?`<div class="vq">${tex(X.V.q)}</div>`:`<img ${QIMG(X.id)} alt="문제">`}`;
   let right=`<div><span class="small">남은 시간</span><div class="timer" id="timer"></div></div>`;
   right+=X.mc?`<div class="choices">${[1,2,3,4,5].map(k=>`<button data-k="${k}" class="${a==k?'sel':''}">${CIRC[k]}</button>`).join('')}</div>`
     :`<div class="shortans"><input id="sa" inputmode="numeric" placeholder="정수 답" value="${a??''}"></div>`;
@@ -535,7 +591,7 @@ function drawExam(){
   sh.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{L.cur=+b.dataset.go;save();drawExam()});
   q('.close').onclick=()=>{clearInterval(tick);document.getElementById('ov').classList.remove('show');render()};
   q('#esubmit').onclick=()=>{const n=30-Object.keys(L.ans).length;if(confirm(n?`답하지 않은 문항이 ${n}개 있습니다. 제출할까요?`:'제출하고 채점할까요?'))finishExam()};
-  const upd=()=>{const t=document.getElementById('timer');if(!t){clearInterval(tick);return}const s=examLeft();t.textContent=s>=0?fmtTime(s):'시간 초과 '+fmtTime(-s);t.classList.toggle('over',s<0)};
+  const upd=()=>{const t=document.getElementById('timer');if(!t){clearInterval(tick);return}const s=examLeft();t.textContent=s>=0?fmtTime(s):s>-3600?'시간 초과 '+fmtTime(-s):'제한 시간(100분)이 지났습니다';t.classList.toggle('over',s<0)};
   clearInterval(tick);upd();tick=setInterval(upd,1000);
 }
 function finishExam(){
@@ -726,7 +782,7 @@ function render(){
   // 왼쪽 단원 목록은 문항 선택 탭에서만
   document.querySelector('.layout').classList.toggle('noside',state.tab!=='units');
   const m=document.getElementById('main');
-  m.innerHTML=state.tab==='units'?renderUnits():state.tab==='tags'?renderTags():state.tab==='wrong'?renderWrong():state.tab==='review'?renderReview():state.tab==='exam'?renderExam():state.tab==='result'?renderResult():state.tab==='print'?renderPrint():renderStats();
+  m.innerHTML=state.tab==='home'?renderHome():state.tab==='units'?renderUnits():state.tab==='tags'?renderTags():state.tab==='wrong'?renderWrong():state.tab==='review'?renderReview():state.tab==='exam'?renderExam():state.tab==='result'?renderResult():state.tab==='print'?renderPrint():renderStats();
   const g=s=>document.getElementById(s);
   if(g('startRev')) g('startRev').onclick=()=>{const d=dueIds();if(d.length)openQ(d[0],d)};
   if(g('mkmix')) g('mkmix').onclick=()=>{const lv=g('ovar')?g('ovar').value:'';const ids=makeMixed({only2022:g('o22').checked,fresh:g('ofresh').checked,weak:g('oweak').checked,lv});if(!ids){alert('조건에 맞게 만들지 못했습니다. 옵션을 바꿔 다시 시도해 주세요.');return}const no=1+Math.max(0,...DB.sets.concat(DB.results).map(x=>+((x.title.match(/나만의 모의고사 (\d+)회/)||[])[1]||0)));const title=`나만의 모의고사 ${no}회${lv?` (${LVNAME[lv]})`:''}`;DB.sets.push({title,ids,t:Date.now()});save();if(confirm(`${title}를 만들었습니다. 지금 풀까요?\n(취소를 누르면 목록에 저장만 합니다)`))startExam(title,ids);else render()};
@@ -738,6 +794,11 @@ function render(){
   m.querySelectorAll('[data-res]').forEach(a=>a.onclick=e=>{e.preventDefault();state.tab='result';state.res=+a.dataset.res;syncTabs();render()});
   m.querySelectorAll('[data-open]').forEach(a=>a.onclick=e=>{e.preventDefault();const r=DB.results[state.res];const id=a.dataset.open;openKey(id,r.ids,{pick:r.ans[id]??null,ok:!!r.marks[id]})});
   if(g('resume')) g('resume').onclick=drawExam;
+  m.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>openQ(b.dataset.q));
+  m.querySelectorAll('[data-qv]').forEach(b=>b.onclick=()=>{const [id,lv]=b.dataset.qv.split('|');openQ(id,null,null,+lv)});
+  m.querySelectorAll('[data-qs]').forEach(b=>b.onclick=()=>openQ(b.dataset.qs));
+  m.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{state.tab=b.dataset.goto;syncTabs();render();scrollTo(0,0)});
+  m.querySelectorAll('[data-unit]').forEach(b=>b.onclick=()=>{state.unit=b.dataset.unit;state.conc='all';state.sw='all';state.tab='units';syncTabs();render();scrollTo(0,0)});
   if(g('quit')) g('quit').onclick=()=>{if(confirm('풀던 시험을 그만둘까요? 답은 저장되지 않습니다.')){delete DB.live;save();render()}};
   if(g('backExam')) g('backExam').onclick=()=>{state.tab='exam';syncTabs();render()};
   if(g('retake')) g('retake').onclick=()=>{const r=DB.results[state.res];startExam(r.title,r.ids)};
@@ -763,8 +824,8 @@ function render(){
   if(!TAGS_ON()){document.body.classList.add('notags');m.querySelectorAll('a[data-tagl]').forEach(a=>a.replaceWith(a.textContent))}
   refreshBadges();
 }
-function syncTabs(){document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===state.tab))}
-document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>{state.tab=b.dataset.tab;syncTabs();render()});
+function syncTabs(){const t=state.tab==='result'?'exam':state.tab==='print'?'units':state.tab;document.querySelectorAll('nav.tabs button').forEach(b=>{const on=b.dataset.tab===t;b.classList.toggle('on',on);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')})}
+document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>{state.tab=b.dataset.tab;syncTabs();render();scrollTo(0,0)});
 
 // ---- solving ----
 let cur=null;
@@ -784,7 +845,7 @@ function closeQ(){document.getElementById('ov').classList.remove('show');cur=nul
 function drawQ(){
   const {it}=cur, u=unitBy[it.code], V=cur.v?VARS[it.id][cur.v-1]:null, l=V?vlast(it.id,cur.v):last(it.id), mc=V?V.mc:it.mc;
   const tags=it.tags.map(t=>unitBy[t].name), atext=V?tex(V.anst):ansText(it);
-  let left=`<div class="qhead"><div><b>${it.label} ${it.n}번${V?' 변형':''}</b> <span class="pt">${it.pts}점</span> ${it.code==='C0'&&!V?'<span class="oos">2022 개정 교육과정 제외 내용</span>':''}<div class="small">${u.subject} › ${u.mid} › ${u.name}${tags.length?' · 함께 쓰이는 개념: '+tags.join(', '):''}</div>${chipsOf(it,cur.v)}</div><button class="close" title="닫기">✕</button></div>
+  let left=`<div class="qhead"><div><b>${it.label} ${it.n}번${V?' 변형':''}</b> <span class="pt">${it.pts}점</span> ${it.code==='C0'&&!V?'<span class="oos">2022 개정 교육과정 제외 내용</span>':''}<div class="small">${u.subject} › ${u.mid} › ${u.name}${tags.length?' · 함께 쓰이는 개념: '+tags.join(', '):''}</div>${chipsOf(it,cur.v)}</div><button class="close" aria-label="닫기" title="닫기">✕</button></div>
   ${V?`<div class="vq">${tex(V.q)}</div>${V.note?`<p class="small">※ ${V.note}</p>`:''}`:`<img ${QIMG(it.id)} alt="문제">`}`;
   if(cur.showSol&&V){
     left+=`<div class="sol"><b>풀이</b><div class="vq">${tex(V.sol)}</div><p><b>정답</b> ${atext}</p></div>`;

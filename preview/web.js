@@ -211,6 +211,21 @@ async function changePw() {
   alert(error ? '바꾸지 못했습니다: ' + error.message : '비밀번호를 바꿨습니다.');
 }
 function whoBar(page) {
+  const acct = document.getElementById('acct');
+  if (acct) {   // 칠판 디자인 화면: 왼쪽 레일 아래(휴대폰은 오른쪽 위 동그라미 메뉴)
+    const cls2 = ME.grade ? `${ME.grade}학년 ${ME.class ?? ''}반` : '';
+    const role2 = ME.role === 'student' ? '' : ME.role === 'admin' ? ' · 관리자' : ' · 선생님';
+    acct.innerHTML = `<details><summary aria-label="내 계정 메뉴">${esc((ME.name || '?').slice(0, 1))}</summary><div class="panel"><div class="who">${esc(ME.name)}</div><div>${esc(cls2)}${role2}</div><span id="syncSt"></span><div class="links">`
+      + (ME.role !== 'student' ? (page === 'teacher' ? '<a href="index.html">문제 풀기</a>' : '<a href="teacher.html">선생님 화면</a>') : '')
+      + (page === 'teacher' ? '<a href="teacher_guide.html">사용 설명서</a>' : '<a href="guide.html">사용 설명서</a>')
+      + '<button data-a="pw">비밀번호 바꾸기</button><button data-a="out">로그아웃</button></div></div></details>';
+    const d = acct.querySelector('details'); const wide = matchMedia('(min-width:901px)');
+    const fit = () => { if (wide.matches) d.open = true }; fit(); wide.addEventListener('change', () => { d.open = wide.matches });
+    d.querySelector('summary').addEventListener('click', e => { if (wide.matches) e.preventDefault() });
+    acct.querySelector('[data-a=pw]').onclick = changePw;
+    acct.querySelector('[data-a=out]').onclick = signOut;
+    return;
+  }
   const cls = ME.grade ? `${ME.grade}학년 ${ME.class ?? ''}반 ` : '';
   const role = ME.role === 'student' ? '' : ME.role === 'admin' ? ' (관리자)' : ' (선생님)';
   const el = document.createElement('div'); el.className = 'gw-who';
