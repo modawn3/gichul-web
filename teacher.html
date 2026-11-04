@@ -38,6 +38,8 @@ textarea{width:100%;min-height:160px;font-family:ui-monospace,Consolas,monospace
 .ov.show{display:flex}.sheet{background:var(--panel);border-radius:14px;max-width:820px;width:100%;padding:18px 20px}
 .sheet img{max-width:100%;display:block;margin:8px 0}
 .bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;background:var(--accent)}
+#printWrap{position:fixed;inset:0;background:#e9ebef;z-index:30;overflow:auto;display:none;padding:0 0 40px}#printWrap.show{display:block}
+#printWrap .ptool{position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;z-index:2;margin-bottom:14px}
 .note{background:var(--warn-soft);border-radius:10px;padding:10px 14px;font-size:14px;margin:10px 0}
 </style>
 </head>
@@ -46,11 +48,13 @@ textarea{width:100%;min-height:160px;font-family:ui-monospace,Consolas,monospace
   <h1>선생님 화면</h1>
   <nav class="tabs">
     <button data-tab="class" class="on">반 현황</button>
+    <button data-tab="reinf">오답 보강 노트</button>
     <button data-tab="accounts">학생 계정</button>
     <button data-tab="upload" id="tabUpload" hidden>문항 이미지 올리기</button>
   </nav>
 </header>
 <main id="main"></main>
+<div id="printWrap"><div class="ptool"><button class="btn primary" id="pPrint">인쇄 / PDF로 저장</button><button class="btn" id="pClose">닫기</button><span class="small" id="pSt"></span></div><div id="printArea"></div></div>
 <div class="ov" id="ov"><div class="sheet" id="sheet"></div></div>
 <script src="supabase.js"></script>
 <script src="config.js"></script>
@@ -58,6 +62,7 @@ textarea{width:100%;min-height:160px;font-family:ui-monospace,Consolas,monospace
 <script src="scount.js"></script>
 <script src="tags.js"></script>
 <script src="web.js"></script>
+<script src="reinforce.js"></script>
 <script>
 window.__TEACHER = async function (ME) {
 // 과목별 자료: 수학은 처음부터 있고, 영어·국어는 고를 때 data_xx.js·tags_xx.js를 불러와 따로 담아 둔다
@@ -340,9 +345,86 @@ async function renderUpload() {
   };
 }
 
+// ---- 오답 보강 노트: 마킹 리스트는 이 브라우저 안에서만 읽는다(서버에 올리지 않음, 이름 열은 읽지 않음) ----
+let RF = { files: [], cls: null, n: 10, subs: ['ko', 'ma', 'en'], res: null };
+async function renderReinf() {
+  main.innerHTML = '<p class="small">자료 불러오는 중…</p>';
+  const R = window.Reinforce;
+  if (!window.XLSX) await loadJs('xlsx.full.min.js');
+  await R.load();
+  R.urlFor = async paths => {
+    const out = {};
+    for (let i = 0; i < paths.length; i += 200) {
+      const { data, error } = await sb.storage.from('items').createSignedUrls(paths.slice(i, i + 200), 3600);
+      if (error) throw error;
+      data.forEach(d => { if (d.signedUrl) out[d.path] = d.signedUrl });
+    }
+    return out;
+  };
+  if (!document.getElementById('rfCss')) { const s = document.createElement('style'); s.id = 'rfCss'; s.textContent = R.CSS; document.head.appendChild(s) }
+  const EX = R.exams(), $ = q => main.querySelector(q);
+  const classes = [...new Set(RF.files.flatMap(f => f.parsed.classes))].sort((a, b) => a - b);
+  if (!classes.includes(RF.cls)) RF.cls = classes[0] ?? null;
+  main.innerHTML = `<h2>오답 보강 노트</h2>
+  <div class="note">학교 마킹 리스트(엑셀)를 넣으면 학생별 보강 문항·해설 인쇄본을 만듭니다. 파일은 <b>이 컴퓨터의 브라우저 안에서만</b> 읽고 서버에 올리지 않으며, 이름 열은 읽지 않습니다(반·번호만 사용). 원본 파일 그대로 넣어도 되고, 제목 줄을 반·번호·과목으로 줄인 파일도 됩니다.</div>
+  <h3>1. 마킹 리스트 넣기 (시험마다 한 파일, 여러 개 가능)</h3>
+  <div class="toolbar"><input type="file" id="rfFile" accept=".xls,.xlsx,.csv" multiple><span class="small">예: 6월 모평, 9월 모평, 10월 학평 파일 세 개</span></div>
+  <div class="panel"><table><thead><tr><th>파일</th><th>어느 시험인지</th><th>읽은 줄</th><th>반</th><th></th></tr></thead><tbody>${RF.files.map((f, k) => `<tr><td>${esc(f.name)}</td><td><select data-k="${k}" class="rfEx"><option value="">시험을 고르세요</option>${EX.map(x => `<option value="${x.e}" ${x.e === f.e ? 'selected' : ''}>${esc(x.label)}</option>`).join('')}</select></td><td class="n">${f.parsed.rows.length}</td><td>${f.parsed.classes.join(', ')}</td><td><button class="btn" data-del="${k}">빼기</button></td></tr>`).join('') || '<tr><td colspan="5" class="mu">아직 넣은 파일이 없습니다.</td></tr>'}</tbody></table></div>
+  <h3>2. 반과 문항 수</h3>
+  <div class="toolbar"><select id="rfCls">${classes.map(c => `<option value="${c}" ${c === RF.cls ? 'selected' : ''}>${c}반</option>`).join('') || '<option value="">파일을 먼저 넣으세요</option>'}</select>
+   <label class="small">과목당 <input type="number" id="rfN" value="${RF.n}" min="3" max="20" style="width:60px;font:inherit;padding:6px;border:1px solid var(--line);border-radius:8px"> 문항 내외</label>
+   ${['ko', 'ma', 'en'].map(s => `<label class="small"><input type="checkbox" class="rfS" value="${s}" ${RF.subs.includes(s) ? 'checked' : ''}> ${R.SN[s]}</label>`).join('')}
+   <input type="text" id="rfTitle" value="${esc(RF.title || '')}" placeholder="인쇄본 제목 (예: 3학년)" style="width:180px">
+   <button class="btn primary" id="rfGo" ${RF.files.length && classes.length ? '' : 'disabled'}>학생별 보강 문항 고르기</button></div>
+  <div id="rfRes"></div>
+  <p class="small">규칙: 국어·영어·수학만, 쉬운 문항(난이도 하→중→상) 먼저, 같은 난이도면 두 번 이상 시험에서 틀린 영역 먼저, 영역당 최대 3문항. 비슷한 기출은 원래 문항보다 한 단계 넘게 어렵지 않은 것으로, 넣은 시험 회차는 빼고 실제 기출만 고릅니다(변형 문항 없음). 미적분·기하 선택자는 공통(1~22번)만, 영어는 읽기(18~45번)만 채점합니다. 한 시험에 답안이 비어 있는 학생(결시)은 나머지 시험 기록으로 만듭니다.</p>`;
+  $('#rfFile').onchange = async e => {
+    for (const file of e.target.files) {
+      try { const parsed = R.parse(await file.arrayBuffer()); RF.files.push({ name: file.name, parsed, e: R.guessExam(file.name) }) }
+      catch (err) { alert(file.name + ': ' + (err.message || err)) }
+    }
+    RF.res = null; renderReinf();
+  };
+  main.querySelectorAll('.rfEx').forEach(s => s.onchange = () => { RF.files[+s.dataset.k].e = s.value; RF.res = null; showRes() });
+  main.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { RF.files.splice(+b.dataset.del, 1); RF.res = null; renderReinf() });
+  $('#rfCls').onchange = e => { RF.cls = +e.target.value; RF.res = null; showRes() };
+  $('#rfGo').onclick = () => {
+    RF.n = Math.max(3, Math.min(20, +$('#rfN').value || 10)); RF.subs = [...main.querySelectorAll('.rfS:checked')].map(x => x.value); RF.title = $('#rfTitle').value.trim();
+    const used = RF.files.filter(f => f.e);
+    if (!used.length) { alert('파일마다 어느 시험인지 골라 주세요.'); return }
+    const dup = used.map(f => f.e).filter((e, i, a) => a.indexOf(e) !== i);
+    if (dup.length) { alert('같은 시험을 두 파일에 골랐습니다: ' + [...new Set(dup)].map(R.short).join(', ')); return }
+    RF.res = R.analyze(used, RF.cls, { n: RF.n, subs: RF.subs.length ? RF.subs : ['ko', 'ma', 'en'] }); showRes();
+  };
+  showRes();
+}
+function showRes() {
+  const R = window.Reinforce, box = document.getElementById('rfRes'); if (!box) return;
+  if (!RF.res) { box.innerHTML = ''; return }
+  const used = RF.files.filter(f => f.e).sort((a, b) => a.e.localeCompare(b.e)), subs = Object.keys((RF.res[0] || {}).plans || {});
+  box.innerHTML = `<h3>3. ${RF.cls}반 학생 ${RF.res.length}명</h3><div class="toolbar"><button class="btn primary" id="rfAll" ${RF.res.length ? '' : 'disabled'}>반 전체 인쇄 화면</button><span class="small">학생별로 보려면 줄 끝의 "인쇄 화면"을 누르세요. 인쇄 화면에서 "PDF로 저장"을 고르면 파일로 저장됩니다.</span></div>
+  <div class="panel"><table><thead><tr><th class="n">번호</th>${subs.map(s => `<th>${R.SN[s]} (${used.map(f => R.short(f.e)).join('/')})</th>`).join('')}<th>확인할 점</th><th></th></tr></thead><tbody>${RF.res.map((x, k) => `<tr><td class="n">${x.no}</td>${subs.map(s => { const p = x.plans[s]; if (!p) return '<td class="mu">-</td>'; const U = R.SD[s].units; return `<td>${used.map(f => p.scores[f.e] ? p.scores[f.e][0] : '-').join('/')} <span class="mu">${esc(p.subj)}</span><br><span class="small">보강 ${p.picks.length}문항${p.rep.length ? ' · 반복: ' + esc(p.rep.slice(0, 2).map(c => U[c].name).join(', ')) : ''}</span></td>` }).join('')}<td class="small" style="white-space:normal;min-width:200px">${x.flags.map(esc).join(', ')}</td><td><button class="btn" data-pr="${k}">인쇄 화면</button></td></tr>`).join('')}</tbody></table></div>
+  <p class="small">점수는 맞힌 문항 수입니다(국어 45, 수학 확통 30·미적분/기하 공통 22, 영어 읽기 28문항 기준).</p>`;
+  const go = list => openPrint(list, used);
+  document.getElementById('rfAll').onclick = () => go(RF.res);
+  box.querySelectorAll('[data-pr]').forEach(b => b.onclick = () => go([RF.res[+b.dataset.pr]]));
+}
+async function openPrint(list, used) {
+  const R = window.Reinforce, W = document.getElementById('printWrap'), A = document.getElementById('printArea'), st = document.getElementById('pSt'), pb = document.getElementById('pPrint');
+  W.classList.add('show'); A.innerHTML = ''; pb.disabled = true; st.textContent = '그림 불러오는 중…';
+  document.getElementById('pClose').onclick = () => { W.classList.remove('show'); A.innerHTML = '' };
+  pb.onclick = () => window.print();
+  try {
+    const { html, log } = await R.render(list, used, RF.title || '', (d, n) => st.textContent = `그림 불러오는 중… ${d}/${n}`);
+    A.innerHTML = html;
+    await Promise.all([...A.querySelectorAll('img')].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r })));
+    st.textContent = `${list.length}명 준비됨${log.length ? ` · 빈 줄을 못 찾아 자른 곳 ${log.length}군데` : ''}`; pb.disabled = false;
+  } catch (e) { console.error(e); st.textContent = '만들지 못했습니다: ' + (e.message || e) }
+}
+
 function render() {
   document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
-  const f = tab === 'class' ? renderClass : tab === 'accounts' ? renderAccounts : renderUpload;
+  const f = tab === 'class' ? renderClass : tab === 'accounts' ? renderAccounts : tab === 'reinf' ? renderReinf : renderUpload;
   f().catch(e => { console.error(e); main.innerHTML = `<p class="bad">불러오지 못했습니다: ${esc(e.message || e)}</p>` });
 }
 document.querySelectorAll('nav.tabs button').forEach(b => b.onclick = () => { tab = b.dataset.tab; render() });
