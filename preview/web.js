@@ -240,6 +240,24 @@ function whoBar(page) {
 }
 window.ME = () => ME;
 
+
+// ---- 휴대폰 화면: 넓은 표는 옆으로 밀어 보게 감싸고, 단원 목록은 '단원 바꾸기' 단추로 펼친다 ----
+function mobileTidy() {
+  const main = document.getElementById('main'), side = document.getElementById('side');
+  if (!main) return;
+  const fix = () => {
+    main.querySelectorAll('table.stats').forEach(t => { if (!t.parentElement.classList.contains('tscroll')) { const d = document.createElement('div'); d.className = 'tscroll'; t.before(d); d.append(t) } });
+    const head = main.querySelector('.unithead');
+    if (!side || !head || side.closest('.noside') || head.querySelector('.sidetg')) return;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn sidetg';
+    const label = () => b.textContent = document.body.classList.contains('side-open') ? '단원 목록 접기' : '단원 바꾸기';
+    b.onclick = () => { document.body.classList.toggle('side-open'); label(); if (document.body.classList.contains('side-open')) scrollTo(0, 0) };
+    label(); head.appendChild(b);
+  };
+  new MutationObserver(fix).observe(main, { childList: true });
+  if (side) side.addEventListener('click', e => { if (e.target.closest('.unit')) document.body.classList.remove('side-open') }, true);
+  fix();
+}
 async function boot() {
   addCss();
   let { data: { session } } = await sb.auth.getSession();
@@ -255,7 +273,7 @@ async function boot() {
     } else {
       window.__DB = await loadDB();
       lastDB = window.__DB;
-      whoBar('app'); window.__APP();
+      whoBar('app'); window.__APP(); mobileTidy();
       if (rowsToPush(lastDB).length) pushNow();
       if (usedLocal) pushState();
     }
