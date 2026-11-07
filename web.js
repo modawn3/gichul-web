@@ -1,8 +1,8 @@
 // 웹 버전 공통: 로그인, 서버 기록 불러오기·저장, 비공개 저장소의 문항 이미지 주소 받기.
 // index.html(학생 화면)은 window.__APP, teacher.html(선생님 화면)은 window.__TEACHER를 정의하고, 로그인이 끝나면 여기서 실행한다.
-// 과목: 수학(index.html), 영어(english.html, data_en.js가 window.SUBJ='en'), 국어(korean.html, data_ko.js가 'ko'). 영어·국어 문항 id는 'en_'·'ko_'로 시작한다.
-const SUBJ = window.SUBJ || 'math', SUBS = ['en', 'ko'], PFX = SUBJ === 'math' ? '' : SUBJ + '_';
-const SUBJNAME = { math: '수학', en: '영어', ko: '국어' };
+// 과목: 수학(index.html), 영어(english.html, data_en.js가 window.SUBJ='en'), 국어(korean.html, data_ko.js가 'ko'), 고2 통합사회(social.html, 'so')·통합과학(science.html, 'sc'). 수학 밖 과목 문항 id는 '<과목>_'으로 시작한다.
+const SUBJ = window.SUBJ || 'math', SUBS = ['en', 'ko', 'so', 'sc'], PFX = SUBJ === 'math' ? '' : SUBJ + '_';
+const SUBJNAME = { math: '수학', en: '영어', ko: '국어', so: '통합사회', sc: '통합과학' };
 const mine = id => (SUBS.find(x => String(id).startsWith(x + '_')) || 'math') === SUBJ;
 const sb = supabase.createClient(window.SB_URL, window.SB_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
 window.sb = sb;
@@ -74,7 +74,7 @@ async function loadDB() {
   if (st.error) throw st.error;
   // user_state 한 칸에 수학 기록은 맨 위에, 영어·국어 기록은 en·ko 아래에 둔다
   const raw = st.data ? st.data.data || {} : {};
-  let data = SUBJ !== 'math' ? (raw[SUBJ] || {}) : (({ en, ko, ...m }) => m)(raw);
+  let data = SUBJ !== 'math' ? (raw[SUBJ] || {}) : (({ en, ko, so, sc, ...m }) => m)(raw);
   const local = lsGet(SKEY);   // 저장하기 전에 창을 닫았으면 이 기기의 것이 더 새것
   if (local && (!st.data || local.t > Date.parse(st.data.updated_at))) data = local.data;
   const DB = Object.assign({ rev: {}, results: [], sets: [] }, data, { att: {}, vatt: {} });
@@ -122,7 +122,7 @@ async function pushNow() {
   } catch (e) { console.warn(e); setSync(false) }
   pushing = false;
 }
-function stateOf(DB) { const { att, vatt, en, ko, ...rest } = DB; return rest }
+function stateOf(DB) { const { att, vatt, en, ko, so, sc, ...rest } = DB; return rest }
 async function pushState() {
   // 다른 과목 기록은 서버에 있는 그대로 두고 이 과목 부분만 바꾼다
   const { data: cur, error: e0 } = await sb.from('user_state').select('data').eq('user_id', ME.id).maybeSingle();
@@ -230,7 +230,7 @@ function whoBar(page) {
   const role = ME.role === 'student' ? '' : ME.role === 'admin' ? ' (관리자)' : ' (선생님)';
   const el = document.createElement('div'); el.className = 'gw-who';
   el.innerHTML = `<span id="syncSt"></span><span>${esc(cls)}${esc(ME.name)}${role}</span>`
-    + (page === 'teacher' ? '' : [['index.html', 'math'], ['korean.html', 'ko'], ['english.html', 'en']].filter(x => x[1] !== SUBJ).map(x => `<a href="${x[0]}">${SUBJNAME[x[1]]}</a>`).join(''))
+    + (page === 'teacher' ? '' : [['index.html', 'math'], ['korean.html', 'ko'], ['english.html', 'en'], ['social.html', 'so'], ['science.html', 'sc']].filter(x => x[1] !== SUBJ).map(x => `<a href="${x[0]}">${SUBJNAME[x[1]]}</a>`).join(''))
     + (ME.role !== 'student' ? (page === 'teacher' ? '<a href="index.html">문제 풀기</a>' : '<a href="teacher.html">선생님 화면</a>') : '')
     + (page === 'teacher' ? '<a href="teacher_guide.html">사용 설명서</a>' : '<a href="guide.html">사용 설명서</a>')
     + '<button data-a="pw">비밀번호 바꾸기</button><button data-a="out">로그아웃</button>';
