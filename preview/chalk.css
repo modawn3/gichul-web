@@ -30,7 +30,8 @@ body.chalk nav.tabs button:hover{background:var(--slate-2);color:var(--chalk)}
 body.chalk nav.tabs button.on{background:var(--slate-3);color:var(--chalk);font-weight:600;box-shadow:inset 3px 0 0 var(--yellow)}
 body.chalk nav.tabs .badge{margin-left:auto;background:var(--slate-line);color:var(--chalk);font-size:12px;min-width:22px;border-radius:11px;padding:1px 7px;text-align:center}
 body.chalk nav.tabs .badge.bad{background:#7a2e27;color:#ffe9e6}
-.subj{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--slate-2);padding:4px;border-radius:10px}
+.subj{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;background:var(--slate-2);padding:4px;border-radius:10px}
+.subj>*{grid-column:span 2}.subj>:nth-child(n+4){grid-column:span 3}.subj i{font-style:normal}
 .subj a,.subj span{font-size:14px;text-align:center;padding:8px 0;border-radius:7px;color:var(--chalk-mu);text-decoration:none;min-height:36px;display:flex;align-items:center;justify-content:center}
 .subj a:hover{color:var(--chalk);background:var(--slate-3)}
 .subj span[aria-current]{background:var(--chalk);color:var(--slate);font-weight:700}
@@ -232,8 +233,8 @@ body.chalk .gw-loading{background:var(--bg);color:var(--muted)}
   .rail{position:sticky;top:0;z-index:15;height:auto;flex-direction:row;align-items:center;gap:10px;padding:10px 14px;overflow:visible}
   .rail .brand b{font-size:17px}.rail .brand b::after{display:none}.rail .brand small{display:none}.rail .brand{padding:0}
   .rail .spacer{display:none}
-  .subj{margin-left:auto;grid-template-columns:repeat(3,auto)}
-  .subj a,.subj span{padding:6px 10px;min-height:34px;font-size:13px}
+  .subj{margin-left:auto;grid-template-columns:repeat(5,auto)}.subj>*,.subj>:nth-child(n+4){grid-column:auto}.subj i{display:none}
+  .subj a,.subj span{padding:6px 8px;min-height:34px;font-size:13px}
   #acct{border:0;padding:0;position:relative}
   #acct details summary{width:38px;height:38px;border-radius:50%;background:var(--slate-2);display:flex;align-items:center;justify-content:center;color:var(--chalk);font-weight:700;font-size:14px}
   #acct .panel{position:absolute;right:0;top:46px;background:var(--slate);border:1px solid var(--slate-line);border-radius:12px;padding:14px;min-width:220px;box-shadow:0 12px 30px rgba(0,0,0,.3)}
