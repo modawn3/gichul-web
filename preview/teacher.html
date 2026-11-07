@@ -74,7 +74,7 @@ textarea{width:100%;min-height:160px;font-family:ui-monospace,Consolas,monospace
 <script>
 window.__TEACHER = async function (ME) {
 // 과목별 자료: 수학은 처음부터 있고, 영어·국어는 고를 때 data_xx.js·tags_xx.js를 불러와 따로 담아 둔다
-const SUBJ = { ma: { name: '수학', unit: '단원', conc: '핵심 개념' }, en: { name: '영어', unit: '유형', conc: '소재' }, ko: { name: '국어', unit: '영역', conc: '문항 유형' } };
+const SUBJ = { ma: { name: '수학', unit: '단원', conc: '핵심 개념' }, en: { name: '영어', unit: '유형', conc: '소재' }, ko: { name: '국어', unit: '영역', conc: '문항 유형' }, so: { name: '통합사회(고2)', unit: '단원', conc: '핵심 개념' }, sc: { name: '통합과학(고2)', unit: '단원', conc: '핵심 개념' } };
 const MA_ITEMS = window.ITEMS, SD = { ma: { UNITS: window.UNITS, ITEMS: window.ITEMS, TAGS: window.TAGS || {}, TD: window.TAGDEF || { c: {} } } };
 let subj = 'ma', UNITS, ITEMS, TAGS, TD, byId, unitBy;
 function useSubj(s) {
@@ -313,7 +313,7 @@ async function renderUpload() {
   const hasQ = [...have].filter(p => p.startsWith('q/')).length, hasS = have.size - hasQ;
   main.innerHTML = `<h2>문항 이미지 올리기</h2>
   <div class="tiles"><div class="tile"><div class="k">문제 그림</div><div class="v">${hasQ} / ${needQ}</div></div><div class="tile"><div class="k">해설 그림</div><div class="v">${hasS} / ${needS}</div></div></div>
-  <p class="small">오프라인 기출학습 폴더(또는 배포 zip)에 있는 <b>img_q.js</b>, <b>img_s_2024.js</b>, <b>img_s_2025.js</b>, <b>img_s_2026.js</b>를 한꺼번에 고르세요. 영어는 <b>img_q_en.js</b>, <b>img_s_en.js</b>, 국어는 <b>img_q_ko.js</b>, <b>img_s_ko.js</b>를 고르면 됩니다(위 개수는 수학 기준). 이미 올라간 그림은 건너뜁니다. 새 회차를 추가한 뒤에도 같은 방법으로 올리면 됩니다.</p>
+  <p class="small">오프라인 기출학습 폴더(또는 배포 zip)에 있는 <b>img_q.js</b>, <b>img_s_2024.js</b>, <b>img_s_2025.js</b>, <b>img_s_2026.js</b>를 한꺼번에 고르세요. 영어는 <b>img_q_en.js</b>, <b>img_s_en.js</b>, 국어는 <b>img_q_ko.js</b>, <b>img_s_ko.js</b>, 통합사회·통합과학은 <b>img_q_so.js</b>·<b>img_s_so.js</b>·<b>img_q_sc.js</b>·<b>img_s_sc.js</b>를 고르면 됩니다(위 개수는 수학 기준). 이미 올라간 그림은 건너뜁니다. 새 회차를 추가한 뒤에도 같은 방법으로 올리면 됩니다.</p>
   <div class="toolbar"><input type="file" id="imgf" multiple accept=".js"><label class="small"><input type="checkbox" id="over"> 이미 있는 그림도 다시 올리기</label><button class="btn primary" id="go" disabled>올리기</button></div>
   <div id="ust" class="small"></div><div class="bar"><i id="ubar" style="width:0"></i></div>`;
   const $ = s => main.querySelector(s);
@@ -322,7 +322,7 @@ async function renderUpload() {
     jobs = [];
     for (const f of e.target.files) {
       const t = await f.text();
-      for (const m of t.matchAll(/"((?:en_|ko_)?\d{4}_[^"]+?)":("data:image\/png;base64,[^"]+"|\[[^\]]*\])/g)) {
+      for (const m of t.matchAll(/"((?:[a-z]{2}_)?\d{4}_[^"]+?)":("data:image\/png;base64,[^"]+"|\[[^\]]*\])/g)) {
         if (m[2][0] === '"') jobs.push([`q/${imgKey(m[1])}.png`, m[2].slice(1, -1)]);
         else [...m[2].matchAll(/"(data:image\/png;base64,[^"]+)"/g)].forEach((x, k) => jobs.push([`s/${imgKey(m[1])}_${k + 1}.png`, x[1]]));
       }
