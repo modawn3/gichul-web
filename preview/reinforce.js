@@ -19,6 +19,7 @@ const loadJs = src => new Promise((ok, no) => { const e = document.createElement
 const KEEP = ['UNITS', 'ITEMS', 'TAGS', 'TAGDEF', 'SUBJ', 'PSG', 'SCOUNT'];
 R.SD = null;
 R.load = async function () {
+  if (!window.CUTMODEL) try { await loadJs('cutmodel.js') } catch (e) { }   // 진단표의 수학 예상 등급용
   if (R.SD) return R.SD;
   const SD = {}, keep = KEEP.map(k => [k, window[k]]);
   try {
@@ -344,6 +345,195 @@ function studentHtml(x, files, title) {
   H.push(sol);
   return `<div class="stu">${H.join('')}</div>`;
 }
+// ---- 반 전체 통계(2026-11-17): 반 오답 분석지·학생 진단표가 같이 쓴다 ----
+// 문항마다 반 응시·오답 수, 고른 답, 전국 오답률(태그 r, top이면 EBSi 실제 값). 학생마다 영역별 맞힌 수.
+const pct = v => v == null || isNaN(v) ? '-' : Math.round(v * 100) + '%';
+function mathPts(rec, g) {
+  if (rec.s !== 'ma' || rec.sel !== '확통' || g.length < 30) return null;
+  return g.reduce((t, x) => t + (x.ok ? +x.it.pts || 0 : 0), 0);
+}
+// 수학(확통) 예상 등급컷: 발표·예상 등급컷이 있으면 그것, 없으면 학생 화면과 같은 모델로 추정
+const CUM = [.04, .11, .23, .40, .60, .77, .89, .96];
+function cutsFor(e) {
+  const M = window.CUTMODEL; if (!M) return null;
+  if (M.cuts && M.cuts[e] && M.cuts[e].c.length === 8) return { c: M.cuts[e].c, src: M.cuts[e].src };
+  const items = R.SD.ma.items.filter(i => i.e === e).sort((a, b) => a.n - b.n); if (items.length !== 30) return null;
+  const TH = [], W = [], WE = []; let ws = 0, we = 0;
+  for (let k = 0; k <= 200; k++) { const t = -5 + k * .05; TH.push(t); const w = Math.exp(-t * t / 2); W.push(w); ws += w; const z = (t - M.mu) / M.s, v = Math.exp(-z * z / 2); WE.push(v); we += v }
+  const P = (c, b, t) => c + (1 - c) / (1 + Math.exp(-M.A * (t - b)));
+  const wrongOf = it => { const o = M.odap[it.e] || {}; if (o[it.n] != null) return o[it.n]; const w15 = Math.min(...Object.values(o), 1) * .95; return Math.min(1 / (1 + Math.exp(-M.g[it.n - 1])), w15) };
+  const bOf = (wrong, c) => { let lo = -8, hi = 8; for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; let p = 0; for (let j = 0; j < TH.length; j++) p += WE[j] / we * P(c, m, TH[j]); if (1 - p > wrong) hi = m; else lo = m } return (lo + hi) / 2 };
+  let D = TH.map(() => { const a = new Float64Array(101); a[0] = 1; return a });
+  for (const it of items) {
+    const g = it.mc ? .2 : 0, b = bOf(wrongOf(it), g);
+    D = D.map((row, j) => { const p = P(g, b, TH[j]), N = new Float64Array(101); for (let s = 0; s <= 100; s++) { if (!row[s]) continue; N[s] += row[s] * (1 - p); if (s + it.pts <= 100) N[s + it.pts] += row[s] * p } return N });
+  }
+  const dist = new Float64Array(101); D.forEach((row, j) => { for (let s = 0; s <= 100; s++) dist[s] += row[s] * W[j] / ws });
+  const tail = new Float64Array(102); for (let s = 100; s >= 0; s--) tail[s] = tail[s + 1] + dist[s];
+  return { c: CUM.map(q => { let s = 100; while (s > 0 && tail[s] < q) s--; return s }), src: '모델 추정' };
+}
+const gradeOf = (sc, c) => { for (let g = 0; g < 8; g++) if (sc >= c[g]) return g + 1; return 9 };
+const CUTC = {};
+R.grade = (e, sc) => { const c = e in CUTC ? CUTC[e] : (CUTC[e] = cutsFor(e)); return c ? { g: gradeOf(sc, c.c), src: c.src } : null };
+
+// res: analyze 결과(한 반 전체)
+R.classStats = function (res, files, subs) {
+  files = files.filter(f => f.e).sort((a, b) => a.e.localeCompare(b.e));
+  const CS = {};
+  for (const s of subs) {
+    const items = {}, exams = {}, area = {}, stu = {};
+    for (const f of files) exams[f.e] = { n: 0, ok: 0, tot: 0, pts: [] };
+    for (const x of res) {
+      const me = stu[x.no] = { area: {}, ex: {} };
+      for (const f of files) {
+        const rec = (x.recs[f.e] || {})[s]; if (!rec || !rec.ans.some(v => v)) continue;
+        const g = grade(f.e, rec), ok = g.filter(v => v.ok).length, pts = mathPts(rec, g);
+        const E = exams[f.e]; E.n++; E.ok += ok; E.tot += g.length; if (pts != null) E.pts.push(pts);
+        me.ex[f.e] = { ok, tot: g.length, pts, sel: rec.subj, wrong: g.filter(v => !v.ok) };
+        for (const v of g) {
+          const t = tg(s, v.id), I = items[v.id] = items[v.id] || { it: v.it, e: f.e, n: 0, wrong: 0, pick: {}, r: t.r, top: t.top, d: t.d || 'mid' };
+          I.n++; if (!v.ok) { I.wrong++; if (/^[1-5]$/.test(v.mine)) I.pick[v.mine] = (I.pick[v.mine] || 0) + 1 }
+          const c = v.it.code, A = area[c] = area[c] || { n: 0, ok: 0, exp: 0 }, M = me.area[c] = me.area[c] || { n: 0, ok: 0 };
+          A.n++; M.n++; if (v.ok) { A.ok++; M.ok++ } A.exp += 1 - (t.r ?? .5);
+        }
+      }
+    }
+    CS[s] = { items, exams, area, stu };
+  }
+  return CS;
+};
+// 수업용 문항: 반 오답률 30% 이상이면서 전국보다 많이 틀린 순(전국 오답률 85% 이상 초고난도 제외), 영역당 2개, 비슷한 기출 1개씩
+function lessonPicks(s, C, taken, N) {
+  const L = Object.values(C.items).filter(I => I.n >= 5 && I.wrong / I.n >= .3 && (I.r ?? .5) < .85)
+    .map(I => ({ ...I, cw: I.wrong / I.n, gap: I.wrong / I.n - (I.r ?? .5) }))
+    .sort((a, b) => (b.gap + b.cw * .5) - (a.gap + a.cw * .5));
+  const out = [], per = {}, used = new Set(), PS = R.SD[s].psg;
+  for (const I of L) {
+    if (out.length >= N) break;
+    const c = I.it.code; if ((per[c] || 0) >= 2) continue; per[c] = (per[c] || 0) + 1;
+    const sel = s === 'ma' ? '확통' : (I.it.sel || null);
+    let best = null;
+    for (const b of pool(s, sel, taken)) {
+      if (used.has(b.id)) continue;
+      const tb = tg(s, b.id), gap = tb.d ? DORD[tb.d] - DORD[I.d] : 0; if (gap > 1) continue;
+      let [sc, why] = sim(s, I.it, b); if (gap === 1) sc -= 2.5;
+      if (!best || sc > best.sc) best = { sc, b, why };
+    }
+    if (best) used.add(best.b.id);
+    out.push({ I, sim: best && best.b, why: best ? best.why : [] });
+  }
+  return out;
+}
+const topPick = I => { const e = Object.entries(I.pick).sort((a, b) => b[1] - a[1])[0]; return e && e[1] >= 2 ? `${CIR[+e[0] - 1]} ${pct(e[1] / I.n)}` : '-' };
+const bar = (v, ref) => `<span class="bar"><i style="width:${Math.round((v || 0) * 100)}%"></i>${ref != null ? `<u style="left:${Math.round(ref * 100)}%"></u>` : ''}</span>`;
+
+// 반 오답 분석지(선생님용 요약 + 수업용 문항 묶음 + 정답·해설)
+function classHtml(res, files, title, CS, N) {
+  files = files.filter(f => f.e).sort((a, b) => a.e.localeCompare(b.e));
+  const cls = res[0].cls, taken = new Set(files.map(f => f.e)), H = [], picks = {};
+  H.push(`<div class="first"><h1>${title ? esc(title) + ' ' : ''}${cls}반 모의고사 오답 분석 <span class="sub">(선생님용)</span></h1><div class="sub">${esc(files.map(f => R.short(f.e)).join(' · '))} 마킹 리스트 기준 · ${res.length}명 · 전국 오답률은 EBSi 오답률(상위 15문항은 실제 값, 나머지는 추정)</div>`);
+  for (const s of Object.keys(CS)) {
+    const C = CS[s], U = R.SD[s].units; if (!Object.keys(C.items).length) continue;
+    const P = picks[s] = lessonPicks(s, C, taken, N), inP = new Set(P.map(p => p.I.it.id));
+    H.push(`<h2>${SN[s]}</h2><table><tr><th>시험</th><th>응시</th><th>반 평균 맞힌 문항</th>${s === 'ma' ? '<th>확통 응시자 평균 원점수</th>' : ''}</tr>`);
+    for (const f of files) { const E = C.exams[f.e]; if (!E.n) { H.push(`<tr><td>${R.short(f.e)}</td><td colspan="3">기록 없음</td></tr>`); continue } H.push(`<tr><td>${R.short(f.e)}</td><td>${E.n}명</td><td>${(E.ok / E.n).toFixed(1)} / ${(E.tot / E.n).toFixed(0)}</td>${s === 'ma' ? `<td>${E.pts.length ? (E.pts.reduce((a, b) => a + b, 0) / E.pts.length).toFixed(1) + `점 (${E.pts.length}명)` : '-'}</td>` : ''}</tr>`) }
+    H.push('</table>');
+    const A = Object.entries(C.area).filter(([c, v]) => v.n >= 5).map(([c, v]) => ({ c, rate: v.ok / v.n, exp: v.exp / v.n, n: v.n })).sort((a, b) => (a.rate - a.exp) - (b.rate - b.exp)).slice(0, 6);
+    H.push(`<table><tr><th>전국보다 약한 영역</th><th>푼 문항(연인원)</th><th>반 정답률</th><th>전국 예상</th><th>차이</th></tr>${A.map(a => `<tr><td>${esc(U[a.c].name)}</td><td>${a.n}</td><td>${bar(a.rate, a.exp)} ${pct(a.rate)}</td><td>${pct(a.exp)}</td><td class="${a.rate < a.exp ? 'rep' : ''}">${a.rate < a.exp ? '−' : '+'}${Math.abs(Math.round((a.rate - a.exp) * 100))}%p</td></tr>`).join('')}</table>`);
+    const T = Object.values(C.items).filter(I => I.n >= 5).sort((a, b) => b.wrong / b.n - a.wrong / a.n).slice(0, 10);
+    H.push(`<table><tr><th>많이 틀린 문항</th><th>영역</th><th>난이도</th><th>반 오답률</th><th>전국</th><th>많이 고른 오답</th></tr>${T.map(I => `<tr><td>${inP.has(I.it.id) ? '★ ' : ''}${R.short(I.e)} ${I.it.n}번</td><td>${esc(U[I.it.code].name)}</td><td>${DN[I.d]}</td><td>${pct(I.wrong / I.n)}</td><td>${pct(I.r)}${I.top ? '' : '<span class="sub">*</span>'}</td><td>${topPick(I)}</td></tr>`).join('')}</table>`);
+    H.push(`<div class="note">★ = 뒤의 수업용 문항에 넣은 문항(반 오답률 30% 이상이면서 전국보다 많이 틀린 순, 전국 오답률 85% 이상 초고난도는 뺌, 영역당 2개). * 전국 오답률 추정값. 막대의 세로선 = 전국 예상 정답률.</div>`);
+  }
+  H.push('</div>');
+  let F = new Flow(), cnt = 0;
+  for (const s of Object.keys(picks)) {
+    const P = picks[s], U = R.SD[s].units, PS = R.SD[s].psg, shown = new Set(); if (!P.length) continue;
+    if (F.pages[F.pages.length - 1][0].length || F.pages[F.pages.length - 1][1].length) F.newpage();
+    F.header(`<div class="sech">${SN[s]} 수업용 문항</div>`, 10);
+    P.forEach((p, k) => {
+      const it = p.I.it, t = `${SN[s]} ${k + 1}. ${R.short(p.I.e)} ${it.n}번 · ${U[it.code].name} — 반 오답률 ${pct(p.I.cw)} (전국 ${pct(p.I.r)})`;
+      F.header(`<div class="qh"><b>${SN[s]} ${k + 1}.</b> ${esc(R.short(p.I.e))} ${it.n}번 · ${esc(U[it.code].name)} — <span class="sub">반 오답률 ${pct(p.I.cw)} (전국 ${pct(p.I.r)})</span></div>`, t.length, 40);
+      const ps = PS[it.id]; if (ps && !shown.has(ps)) { F.image(qPath(ps), true, ps); shown.add(ps) }
+      F.image(qPath(it.id), false, it.id); cnt++;
+      if (p.sim) {
+        const b = p.sim, t2 = `${SN[s]} ${k + 1}-1. 같은 유형 연습 · ${b.label} ${b.n}번 ${p.why.join(' · ')}`;
+        F.header(`<div class="qh" style="border-left-color:#999"><b>${SN[s]} ${k + 1}-1.</b> 같은 유형 연습 · ${esc(b.label)} ${b.n}번 <span class="sub">${esc(p.why.join(' · '))}</span></div>`, t2.length, 40);
+        const ps2 = PS[b.id]; if (ps2 && !shown.has(ps2)) { F.image(qPath(ps2), true, ps2); shown.add(ps2) }
+        F.image(qPath(b.id), false, b.id);
+      }
+    });
+  }
+  if (!cnt) return `<div class="stu">${H.join('')}<p class="note">조건에 맞는 수업용 문항이 없습니다.</p></div>`;
+  H.push(F.html(`${cls}반 수업용 문항`));
+  const ans = ['<h2>정답</h2><table class="ans">'];
+  for (const s of Object.keys(picks)) { const P = picks[s]; if (P.length) ans.push(`<tr><th>${SN[s]}</th>${P.map((p, k) => `<td>${k + 1}. ${esc(A(p.I.it))}${p.sim ? `<br>${k + 1}-1. ${esc(A(p.sim))}` : ''}</td>`).join('')}</tr>`) }
+  ans.push('</table>');
+  const rowsN = ans.length - 2, top = 14 + rowsN * 13;
+  F = new Flow(CAP - top);
+  F.header('<div class="sech">해설</div>', 4);
+  for (const s of Object.keys(picks)) picks[s].forEach((p, k) => {
+    for (const [it, lab] of [[p.I.it, `${k + 1}`], [p.sim, `${k + 1}-1`]]) {
+      if (!it) continue;
+      const t = `${SN[s]} ${lab}. (${it.label} ${it.n}번) 정답 ${A(it)}`;
+      F.header(`<div class="sh">${esc(t)}</div>`, t.length);
+      const sp = sPaths(s, it.id); if (!sp.length) F.note('<div class="note">(해설 그림 없음)</div>');
+      sp.forEach(pth => F.image(pth, true, pth));
+    }
+  });
+  H.push(F.html(`${cls}반 수업용 문항 정답·해설`).replace('<div class="cols">', ans.join('') + '<div class="cols" style="height:' + (CAP - top) + 'mm">'));
+  return `<div class="stu">${H.join('')}</div>`;
+}
+R.classPaths = function (files, CS, N) {
+  const taken = new Set(files.filter(f => f.e).map(f => f.e)), out = [];
+  for (const s of Object.keys(CS)) for (const p of lessonPicks(s, CS[s], taken, N)) for (const it of [p.I.it, p.sim]) {
+    if (!it) continue; const ps = R.SD[s].psg[it.id]; if (ps) out.push(qPath(ps)); out.push(qPath(it.id), ...sPaths(s, it.id));
+  }
+  return out;
+};
+// res: 반 전체 analyze 결과, N: 과목당 수업용 문항 수
+R.renderClass = async function (res, files, title, N, prog) {
+  LOG.length = 0;
+  const subs = Object.keys((res[0] || {}).plans || {}), CS = R.classStats(res, files, subs);
+  await fetchImgs(R.classPaths(files, CS, N), prog);
+  return { html: classHtml(res, files, title, CS, N), log: LOG.slice() };
+};
+
+// 학생별 1쪽 진단표: 점수 흐름(반 평균과), 약한 영역(반 정답률과), 이번에 할 것, 선생님 메모 칸
+function diagHtml(x, files, CS, title, withNote) {
+  const who = `${x.cls}반 ${x.no}번`, H = [], todo = [];
+  H.push(`<div class="first diag"><h1>${title ? esc(title) + ' ' : ''}${who} 모의고사 진단표</h1><div class="sub">${esc(files.map(f => R.short(f.e)).join(' · '))} 결과 · 막대 = 내 정답률, 빨간 세로선 = 반 정답률</div>`);
+  for (const s of Object.keys(x.plans)) {
+    const C = CS[s], me = C && C.stu[x.no], p = x.plans[s], U = R.SD[s].units;
+    if (!me || !Object.keys(me.ex).length) { H.push(`<h2>${SN[s]}</h2><div class="note">응시 기록 없음</div>`); continue }
+    const last = files.map(f => f.e).filter(e => me.ex[e]).pop(), sel = me.ex[last].sel;
+    const cells = files.map(f => {
+      const m = me.ex[f.e], E = C.exams[f.e]; if (!m) return `<td>결시</td>`;
+      let g = ''; if (m.pts != null) { const gr = R.grade(f.e, m.pts); g = ` · <b>${m.pts}점</b>${gr ? ` (예상 ${gr.g}등급)` : ''}` }
+      return `<td><b>${m.ok}</b>/${m.tot}문항${g}<br><span class="sub">반 평균 ${(E.ok / E.n).toFixed(1)}문항</span></td>`;
+    }).join('');
+    H.push(`<h2>${SN[s]} <span class="sub">${esc(sel || '')}</span></h2><table class="dg"><tr>${files.map(f => `<th>${R.short(f.e)}</th>`).join('')}</tr><tr>${cells}</tr></table>`);
+    const ar = Object.entries(me.area).filter(([c, v]) => v.n >= 2).map(([c, v]) => ({ c, r: v.ok / v.n, n: v.n, cr: C.area[c].ok / C.area[c].n })).sort((a, b) => a.r - b.r || a.cr - b.cr);
+    const weak = ar.filter(a => a.r < 1).slice(0, 3), strong = ar.filter(a => a.r >= .8 && a.n >= 3).sort((a, b) => b.r - a.r || b.n - a.n).slice(0, 3);
+    H.push(`<table class="dg"><tr><th style="width:30%">약한 영역</th><th style="width:30%">내 정답률</th><th style="width:9%">반</th><th>틀린 문항</th></tr>${weak.map(a => `<tr><td>${(p && p.rep.includes(a.c)) ? '<span class="rep">반복</span> ' : ''}${esc(U[a.c].name)}</td><td>${bar(a.r, a.cr)} ${pct(a.r)} <span class="sub">(${a.n})</span></td><td>${pct(a.cr)}</td><td class="sub">${esc(files.filter(f => me.ex[f.e]).map(f => { const w = me.ex[f.e].wrong.filter(v => v.it.code === a.c).map(v => v.n); return w.length ? `${R.short(f.e)} ${w.join(',')}` : '' }).filter(Boolean).join(' / '))}</td></tr>`).join('') || '<tr><td colspan="4">두 문항 이상 푼 영역에서 틀린 곳이 없습니다.</td></tr>'}</table>`);
+    if (strong.length) H.push(`<div class="note">잘하는 영역: ${strong.map(a => `${esc(U[a.c].name)} ${pct(a.r)}`).join(', ')}</div>`);
+    // 이번에 할 것: 과목마다 하나(반복해서 틀린 영역 → 쉬운 문항 실수 → 가장 약한 영역 순)
+    const lo = me.ex[last].wrong.filter(v => (tg(s, v.id).d || 'mid') === 'lo');
+    const ref = c => { if (!withNote || !p) return ''; const k = p.picks.findIndex(q => q.target.it.code === c); return k >= 0 ? ` 보강 노트 ${SN[s]} ${k + 1}번부터 풀어 보세요.` : '' };
+    if (p && p.rep.length) { const c = p.rep[0]; todo.push(`<b>${SN[s]}</b> '${esc(U[c].name)}' 영역을 ${p.info[c].exams.map(R.short).join('·')} 시험에서 계속 틀렸습니다.${ref(c)}`) }
+    else if (lo.length >= 2) todo.push(`<b>${SN[s]}</b> ${R.short(last)} 시험의 쉬운 문항(난이도 하)에서 ${lo.length}개 틀렸습니다(${lo.map(v => v.n + '번').join(', ')}). 끝까지 읽고 검산하는 습관부터 잡으세요.`);
+    else if (weak[0]) todo.push(`<b>${SN[s]}</b> '${esc(U[weak[0].c].name)}' 정답률이 ${pct(weak[0].r)}로 가장 낮습니다.${ref(weak[0].c)}`);
+  }
+  H.push(`<h2>이번에 할 것</h2><ol class="todo">${todo.slice(0, 3).map(t => `<li>${t}</li>`).join('') || '<li>틀린 문항을 다시 풀어 보세요.</li>'}</ol>`);
+  if (x.flags.length) H.push(`<div class="note">확인할 점: ${x.flags.map(esc).join(', ')}</div>`);
+  H.push('<div class="memo">선생님 메모</div></div>');
+  return H.join('');
+}
+R.CSS += `
+#printArea .bar{display:inline-block;position:relative;width:22mm;height:3mm;background:#e6e6e6;vertical-align:middle;margin-right:3px}#printArea .bar i{position:absolute;left:0;top:0;bottom:0;background:#555}#printArea .bar u{position:absolute;top:-1mm;bottom:-1mm;width:0;border-left:2px solid #b3261e}
+#printArea .diag h2{margin:8px 0 3px;font-size:12pt}#printArea table.dg{margin:2px 0 3px;font-size:9pt}#printArea table.dg td,#printArea table.dg th{padding:1.5px 5px}
+#printArea .todo{margin:4px 0 6px 0;padding-left:20px;line-height:1.55}#printArea .memo{border:1px solid #999;height:22mm;padding:2mm 3mm;font-size:9pt;color:#777;margin-top:6px}
+#printArea .first{break-before:page}#printArea .stu>.first:first-child{break-before:auto}`;
+
 R.paths = function (list) {
   const out = [];
   for (const x of list) for (const s of Object.keys(x.plans)) {
@@ -353,11 +543,15 @@ R.paths = function (list) {
   return out;
 };
 // list: analyze 결과 중 인쇄할 학생들
-R.render = async function (list, files, title, prog) {
+// opt.all: 반 전체 analyze 결과(진단표의 반 평균용), opt.diag: 진단표를 맨 앞에, opt.only: 진단표만(상담용)
+R.render = async function (list, files, title, prog, opt = {}) {
   LOG.length = 0;
-  await fetchImgs(R.paths(list), prog);
+  const all = opt.all || list, CS = (opt.diag || opt.only) ? R.classStats(all, files, Object.keys((all[0] || {}).plans || {})) : null;
+  if (!opt.only) await fetchImgs(R.paths(list), prog);
   files = files.filter(f => f.e).sort((a, b) => a.e.localeCompare(b.e));
-  return { html: list.map(x => studentHtml(x, files, title)).join(''), log: LOG.slice() };
+  const one = x => opt.only ? `<div class="stu">${diagHtml(x, files, CS, title, false)}</div>`
+    : opt.diag ? studentHtml(x, files, title).replace('<div class="stu">', '<div class="stu">' + diagHtml(x, files, CS, title, true)) : studentHtml(x, files, title);
+  return { html: list.map(one).join(''), log: LOG.slice() };
 };
 R.SN = SN; R.short = R.short; R.esc = esc;
 })();

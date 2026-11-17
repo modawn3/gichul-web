@@ -354,7 +354,7 @@ async function renderUpload() {
 }
 
 // ---- 오답 보강 노트: 마킹 리스트는 이 브라우저 안에서만 읽는다(서버에 올리지 않음, 이름 열은 읽지 않음) ----
-let RF = { files: [], cls: null, n: 10, subs: ['ko', 'ma', 'en'], res: null };
+let RF = { files: [], cls: null, n: 10, subs: ['ko', 'ma', 'en'], res: null, diag: true, ln: 5 };
 async function renderReinf() {
   main.innerHTML = '<p class="small">자료 불러오는 중…</p>';
   const R = window.Reinforce;
@@ -410,23 +410,29 @@ function showRes() {
   const R = window.Reinforce, box = document.getElementById('rfRes'); if (!box) return;
   if (!RF.res) { box.innerHTML = ''; return }
   const used = RF.files.filter(f => f.e).sort((a, b) => a.e.localeCompare(b.e)), subs = Object.keys((RF.res[0] || {}).plans || {});
-  box.innerHTML = `<h3>3. ${RF.cls}반 학생 ${RF.res.length}명</h3><div class="toolbar"><button class="btn primary" id="rfAll" ${RF.res.length ? '' : 'disabled'}>반 전체 인쇄 화면</button><span class="small">학생별로 보려면 줄 끝의 "인쇄 화면"을 누르세요. 인쇄 화면에서 "PDF로 저장"을 고르면 파일로 저장됩니다.</span></div>
+  box.innerHTML = `<h3>3. ${RF.cls}반 학생 ${RF.res.length}명</h3><div class="toolbar"><button class="btn primary" id="rfAll" ${RF.res.length ? '' : 'disabled'}>반 전체 인쇄 화면</button><label class="small"><input type="checkbox" id="rfDiag" ${RF.diag ? 'checked' : ''}> 학생별 진단표(1쪽)를 맨 앞에 넣기</label><span class="small">학생별로 보려면 줄 끝의 "인쇄 화면"을 누르세요. 인쇄 화면에서 "PDF로 저장"을 고르면 파일로 저장됩니다.</span></div>
+  <div class="toolbar"><button class="btn" id="rfClass" ${RF.res.length ? '' : 'disabled'}>반 오답 분석지 (선생님용 요약 + 수업용 문항)</button><label class="small">수업용 문항 과목당 <input type="number" id="rfLn" value="${RF.ln}" min="1" max="10" style="width:56px;font:inherit;padding:6px;border:1px solid var(--line);border-radius:8px">개</label><button class="btn" id="rfDiagOnly" ${RF.res.length ? '' : 'disabled'}>진단표만 인쇄 (상담용, 학생당 1쪽)</button></div>
   <div class="panel"><table><thead><tr><th class="n">번호</th>${subs.map(s => `<th>${R.SN[s]} (${used.map(f => R.short(f.e)).join('/')})</th>`).join('')}<th>확인할 점</th><th></th></tr></thead><tbody>${RF.res.map((x, k) => `<tr><td class="n">${x.no}</td>${subs.map(s => { const p = x.plans[s]; if (!p) return '<td class="mu">-</td>'; const U = R.SD[s].units; return `<td>${used.map(f => p.scores[f.e] ? p.scores[f.e][0] : '-').join('/')} <span class="mu">${esc(p.subj)}</span><br><span class="small">보강 ${p.picks.length}문항${p.rep.length ? ' · 반복: ' + esc(p.rep.slice(0, 2).map(c => U[c].name).join(', ')) : ''}</span></td>` }).join('')}<td class="small" style="white-space:normal;min-width:200px">${x.flags.map(esc).join(', ')}</td><td><button class="btn" data-pr="${k}">인쇄 화면</button></td></tr>`).join('')}</tbody></table></div>
   <p class="small">점수는 맞힌 문항 수입니다(국어 45, 수학 확통 30·미적분/기하 공통 22, 영어 읽기 28문항 기준).</p>`;
-  const go = list => openPrint(list, used);
+  const go = (list, mode) => openPrint(list, used, mode);
+  document.getElementById('rfDiag').onchange = e => { RF.diag = e.target.checked };
   document.getElementById('rfAll').onclick = () => go(RF.res);
+  document.getElementById('rfDiagOnly').onclick = () => go(RF.res, 'diag');
+  document.getElementById('rfClass').onclick = () => { RF.ln = Math.max(1, Math.min(10, +document.getElementById('rfLn').value || 5)); go(RF.res, 'class') };
   box.querySelectorAll('[data-pr]').forEach(b => b.onclick = () => go([RF.res[+b.dataset.pr]]));
 }
-async function openPrint(list, used) {
+async function openPrint(list, used, mode) {
   const R = window.Reinforce, W = document.getElementById('printWrap'), A = document.getElementById('printArea'), st = document.getElementById('pSt'), pb = document.getElementById('pPrint');
   W.classList.add('show'); A.innerHTML = ''; pb.disabled = true; st.textContent = '그림 불러오는 중…';
   document.getElementById('pClose').onclick = () => { W.classList.remove('show'); A.innerHTML = '' };
   pb.onclick = () => window.print();
   try {
-    const { html, log } = await R.render(list, used, RF.title || '', (d, n) => st.textContent = `그림 불러오는 중… ${d}/${n}`);
+    const prog = (d, n) => st.textContent = `그림 불러오는 중… ${d}/${n}`;
+    const { html, log } = mode === 'class' ? await R.renderClass(RF.res, used, RF.title || '', RF.ln, prog)
+      : await R.render(list, used, RF.title || '', prog, { all: RF.res, diag: RF.diag, only: mode === 'diag' });
     A.innerHTML = html;
     await Promise.all([...A.querySelectorAll('img')].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r })));
-    st.textContent = `${list.length}명 준비됨${log.length ? ` · 빈 줄을 못 찾아 자른 곳 ${log.length}군데` : ''}`; pb.disabled = false;
+    st.textContent = `${mode === 'class' ? RF.cls + '반 분석지' : list.length + '명'} 준비됨${log.length ? ` · 빈 줄을 못 찾아 자른 곳 ${log.length}군데` : ''}`; pb.disabled = false;
   } catch (e) { console.error(e); st.textContent = '만들지 못했습니다: ' + (e.message || e) }
 }
 
